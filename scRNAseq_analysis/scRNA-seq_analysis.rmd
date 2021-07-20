@@ -1,0 +1,2683 @@
+---
+title: "Single-cell RNA-seq data analysis"
+author: "YOUR_NAME"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: show
+---
+
+# Introduction
+
+## Why single-cell RNA-seq
+
+Across human tissues there is an incredible diversity of cell types, states, and interactions. To better understand these tissues and the cell types present, single-cell RNA-seq (scRNA-seq) offers a glimpse into what genes are being expressed at the level of individual cells. 
+
+![](./img/scRNA-seq_cell_diversity.png)
+
+_**Image credit:** courtesy of Dr. Ayshwarya Subramanian_
+
+
+This exciting and cutting-edge method can be used to:
+
+- explore which cell types are present in a tissue
+- identify unknown/rare cell types or states
+- elucidate the changes in gene expression during differentiation processes or across time or states
+- identify genes that are differentially expressed in particular cell types between conditions (e.g. treatment or disease)
+- explore changes in expression among a cell type while incorporating spatial, regulatory, and/or protein information
+
+Popular methods to address some of the more common investigations include:
+
+![](./img/sc_analyses.png)
+## Challenges of scRNA-seq analysis
+
+Prior to scRNA-seq, transcriptome analysis was performed using **bulk RNA-seq**, which is a straight-forward method for comparing the **averages of cellular expression**. This method can be a good choice if looking at comparative transcriptomics (e.g. samples of the same tissue from different species), and for quantifying expression signatures in disease studies. It also has potential for the discovery of disease biomarkers if you are **not expecting or not concerned about cellular heterogeneity** in the sample.
+
+While bulk RNA-seq can explore differences in gene expression between conditions (e.g. treatment or disease), the differences at the cellular level are not adequately captured. For instance, in the images below, if analyzed in bulk (left) we would not detect the correct association between the expression of gene A and gene B. However, if we properly group the cells by cell type or cell state, we can see the correct correlation between the genes.
+
+
+![](./img/sc_vs_bulk_cells.png)
+
+_**Image credit:** Trapnell, C. Defining cell types and states with single-cell genomics, Genome Research 2015 (doi:
+https://dx.doi.org/10.1101/gr.190595.115)_
+
+Despite scRNA-seq being able to capture expression at the cellular level, sample generation and library preparation is more expensive and the analysis is much **more complicated and more difficult to interpret**. The complexity of analysis of scRNA-seq data involves:
+
+- Large volume of data
+- Low depth of sequencing per cell
+- Technical variability across cells/samples
+- Biological variability across cells/samples
+
+We will explore each of these complexities in more detail below:
+
+### Large volume of data
+
+Expression data from scRNA-seq experiments represent tens or hundreds of thousands of reads for thousands of cells. The data output is much larger, requiring higher amounts of memory to analyze, larger storage requirements, and more time to run the analyses.
+
+### Low depth of sequencing per cell
+
+For the droplet-based methods of scRNA-seq, the depth of sequencing is shallow, often detecting only 10-50% of the transcriptome per cell. This results in cells showing zero counts for many of the genes. However, in a particular cell, a zero count for a gene could either mean that the gene was **not being expressed** or the transcripts were just **not detected**. Across cells, genes with higher levels of expression tend to have fewer zeros. Due to this feature, many genes will not be detected in any cell and gene expression will be highly variable between cells.
+
+> **Zero-inflated?** scRNA-seq data is often referred to as zero-inflated; however, recent analyses suggest that it does not contain more zeros than what would be expected given the sequencing depth [[Valentine Svensson's blog post](http://www.nxn.se/valent/2017/11/16/droplet-scrna-seq-is-not-zero-inflated)].
+
+### Biological variability across cells/samples
+
+Uninteresting sources of biological variation can result in gene expression between cells being more similar/different than the actual biological cell types/states, which can obscure the cell type identities. Uninteresting sources of biological variation (unless part of the experiment's study) include:
+
+- **Transcriptional bursting:** Gene transcription is not turned on all of the time for all genes. Time of harvest will determine whether gene is on or off in each cell.
+- **Varying rates of RNA processing:** Different RNAs are processed at different rates.
+- **Continuous or discrete cell identities (e.g. the pro-inflammatory potential of each individual T cell):** Continuous phenotypes are by definition variable in gene expression, and separating the continuous from the discrete can sometimes be difficult.
+- **Environmental stimuli:** The local environment of the cell can influence the gene expression depending on spatial position, signaling molecules, etc.
+- **Temporal changes:** Fundamental fluxuating cellular processes, such as cell cycle, can affect the gene expression profiles of individual cells.
+
+
+![](./img/sc_biol_variability.png)
+
+_**Image credit:** Wagner, A, et al. Revealing the vectors of cellular identity with single-cell genomics, Nat Biotechnol. 2016 (doi:https://dx.doi.org/10.1038%2Fnbt.3711)_
+
+### Technical variability across cells/samples
+
+Technical sources of variation can result in gene expression between cells being more similar/different based on technical sources instead of biological cell types/states, which can obscure the cell type identities. Technical sources of variation include:
+
+- **Cell-specific capture efficiency:** Different cells will have differing numbers of transcripts captured resulting in differences in sequencing depth (e.g. 10-50% of transcriptome).
+- **Library quality:** Degraded RNA, low viability/dying cells, lots of free floating RNA, poorly dissociated cells, and inaccurate quantitation of cells can result in low quality metrics
+- **Amplification bias:** During the amplification step of library preparation, not all transcripts are amplified to the same level.
+- **Batch effects:** Batch effects are a significant issue for scRNA-Seq analyses, since you can see significant differences in expression due solely to the batch effect. 
+
+![](./img/batch_effect_pca.png)
+	
+- **Image credit:** [Hicks SC, et al., bioRxiv (2015)](https://www.biorxiv.org/content/early/2015/08/25/025528)_
+
+	To explore the issues generated by poor batch study design, they are highlighted nicely in [this paper](https://f1000research.com/articles/4-121/v1).
+	
+	**How to know whether you have batches?**
+	
+	- Were all RNA isolations performed on the same day?
+	
+	- Were all library preparations performed on the same day?
+	
+	- Did the same person perform the RNA isolation/library preparation for all samples?
+	
+	- Did you use the same reagents for all samples?
+	
+	- Did you perform the RNA isolation/library preparation in the same location?
+	
+	**Best practices regarding batches:**
+	
+	- Design the experiment in a way to **avoid batches**, if possible.
+	
+	- If unable to avoid batches:
+	
+	  - **Do NOT confound** your experiment by batch:
+	  
+	![](./img/confounded_batch.png)
+	    
+	  	_**Image credit:** [Hicks SC, et al., bioRxiv (2015)](https://www.biorxiv.org/content/early/2015/08/25/025528)_
+	  
+	  - **DO** split replicates of the different sample groups across batches. The more replicates the better (definitely more than 2), if doing DE across conditions or making conclusions at the population level. If using inDrops, which prepares a single library at a time, alternate the sample groups (e.g. don't prepare all control libraries first, then prepare all treatment libraries).
+	  	![](./img/batch_effect.png)
+	
+	  	_**Image credit:** [Hicks SC, et al., bioRxiv (2015)](https://www.biorxiv.org/content/early/2015/08/25/025528)_
+	    
+	  - **DO** include batch information in your **experimental metadata**. During the analysis, we can regress out variation due to batch or integrate across batches, so it doesnât affect our results if we have that information.
+
+## Conclusions
+
+While scRNA-seq is a **powerful and insightful method** for the analysis of gene expression with single-cell resolution, there are **many challenges and sources of variation** that can make the analysis of the data complex or limited. Throughout the analysis of scRNA-seq data, we will try to account for or regress out variation due to the various sources of uninteresting variation in our data.
+
+**Overall, we recommend the following:**
+
+- Do not perform single-cell RNA-seq unless it is necessary for the experimental question of interest. Could you answer the question using bulk sequencing, which is simpler and less costly? Perhaps FACS sorting the samples could allow for bulk analysis?
+- Understand the details of the experimental question you wish to address. The recommended library preparation method and analysis workflow can vary based on the specific experiment.
+- Avoid technical sources of variability, if possible:
+	- Discuss experimental design with experts prior to the initiation of the experiment
+	- Isolate RNA from samples at same time 
+	- Prepare libraries at same time or alternate sample groups to avoid batch confounding
+	- Do not confound sample groups by sex, age, or batch
+
+***
+
+
+# Raw data to count matrix
+
+Depending on the library preparation method used, the RNA sequences (also referred to as reads or tags), will be derived either from the 3' ends (or 5' ends) of the transcripts (10X Genomics, CEL-seq2, Drop-seq, inDrops) or from full-length transcripts (Smart-seq). 
+
+	![](./img/sc_library_overviews.png)
+
+- **Image credit:** Papalexi E and Satija R. Single-cell RNA sequencing to explore immune cell heterogeneity, Nature Reviews Immunology 2018 (https://doi.org/10.1038/nri.2017.76)_
+
+The choice of method involves the biological question of interest. The following advantages are listed below for the methods:
+
+- **3' (or 5')-end sequencing:** 
+	- More accurate quantification through use of unique molecular identifiers distinguishing biological duplicates from amplification (PCR) duplicates
+	- Larger number of cells sequenced allows better identity of cell type populations
+	- Cheaper per cell cost
+	- Best results with > 10,000 cells
+
+- **Full length sequencing:**
+	- Detection of isoform-level differences in expression
+	- Identification of allele-specific differences in expression
+	- Deeper sequencing of a smaller number of cells 
+	- Best for samples with low number of cells
+
+Many of the same analysis steps need to occur for 3'-end sequencing as for full-length, but 3' protocols have been increasing in popularity and consist of a few more steps in the analysis. Therefore, our materials are going to detail the analysis of data from these 3' protocols with a focus on the droplet-based methods (inDrops, Drop-seq, 10X Genomics).
+
+
+## 3'-end reads (includes all droplet-based methods)
+
+For the analysis of scRNA-seq data, it is helpful to understand **what information is present in each of the reads** and how we use it moving forward through the analysis. 
+
+For the 3'-end sequencing methods, reads originating from different molecules of the same transcript would have originated only from the 3' end of the transcripts, so would have a high likelihood of having the same sequence. However, the PCR step during library preparation could also generate read duplicates. To determine whether a read is a biological or technical duplicate, these methods use unique molecular identifiers, or UMIs. 
+
+- Reads with **different UMIs** mapping to the same transcript were derived from **different molecules** and are biological duplicates - each read should be counted.
+- Reads with the **same UMI** originated from the **same molecule** and are technical duplicates - the UMIs should be collapsed to be counted as a single read.
+- In image below, the reads for ACTB should be collapsed and counted as a single read, while the reads for ARL1 should each be counted.
+
+	![](./img/umis.png)
+
+_**Image credit:** modified from Macosko EZ et al. Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets, Cell 2015 (https://doi.org/10.1016/j.cell.2015.05.002)_
+
+So we know that we need to keep track of the UMIs, but what other information do we need to properly quanitify the expression in each gene in each of the cells in our samples? Regardless of droplet method, the following are required for proper quantification at the cellular level:
+
+- **Sample index:** determines which sample the read originated from 
+	- Added during library preparation - needs to be documented
+- **Cellular barcode:** determines which cell the read originated from
+	- Each library preparation method has a stock of cellular barcodes used during the library preparation
+- **Unique molecular identifier (UMI):** determines which transcript molecule the read originated from
+	- The UMI will be used to collapse PCR duplicates 
+- **Sequencing read1:** the Read1 sequence
+- **Sequencing read2:** the Read2 sequence
+
+For example, when using the inDrops v3 library preparation method, the following represents how all of the information is acquired in four reads:
+	
+	
+	![](./img/sc_seq_method.png)
+
+
+- **Image credit:** [Sarah Boswell](https://scholar.harvard.edu/saboswell), Director of the Single Cell Sequencing Core at HMS_
+
+- **R1 (61 bp Read 1):** sequence of the read (Red top arrow)
+- **R2 (8 bp Index Read 1 (i7)):** cellular barcode - which cell read originated from (Purple top arrow)
+- **R3 (8 bp Index Read 2 (i5)):** sample/library index - which sample read originated from (Red bottom arrow)
+- **R4 (14 bp Read 2):** read 2 and remaining cellular barcode and UMI - which transcript read originated from (Purple bottom arrow)
+
+The analysis workflow for scRNA-seq is similar for the different droplet-based scRNA-seq methods, but the parsing of the UMIs, cell IDs, and sample indices, will differ between them. For example, below is a schematic of the 10X sequence reads, where the indices, UMIs and barcodes are placed differently:
+
+
+	![](./img/10_seq_method.png)
+
+
+- **Image credit:** [Sarah Boswell](https://scholar.harvard.edu/saboswell), Director of the Single Cell Sequencing Core at HMS_
+
+## Single-cell RNA-seq workflow
+
+The scRNA-seq method will determine how to parse the barcodes and UMIs from the sequencing reads. So, although a few of the specific steps will slightly differ, the overall workflow will generally follow the same steps regardless of method. The general workflow is shown below:
+
+	![](./img/scRNA-seq_steps_image.jpg)
+
+
+
+- **Image credit:** Luecken, MD and Theis, FJ. Current best practices in single-cell RNA seq analysis: a tutorial, Mol Syst Biol 2019 (doi: https://doi.org/10.15252/msb.20188746)_
+
+The steps of the workflow are:
+
+- **Generation of the count matrix (method-specific steps):** formating reads, demultiplexing samples, mapping and quantification
+- **Quality control of the raw counts:** filtering of poor quality cells 
+- **Clustering of filtered counts:** clustering cells based on similarities in transcriptional activity (cell types = different clusters)
+- **Marker identification and cluster annotation:** identifying gene markers for each cluster and annotating known cell type clusters
+- **Optional downstream steps**
+
+Regardless of the analysis being done, conclusions about a population based on a single sample per condition are not trustworthy. **BIOLOGICAL REPLICATES ARE STILL NEEDED!** That is, if you want to make conclusions that correspond to the population and not just the single sample. 
+
+## Generation of count matrix
+
+We are going to start by discussing the first part of this workflow, which is generating the count matrix from the raw sequencing data. We will focus on the 3' end sequencing used by droplet-based methods, such as inDrops, 10X Genomics, and Drop-seq.
+
+![](./img/sc_gen_matrix_workflow.png)
+
+
+After sequencing, the sequencing facility will either output the raw sequencing data as **BCL or FASTQ format or will generate the count matrix**. If the reads are in BCL format, then we will need to convert to FASTQ format. There is a useful command-line tool called `bcl2fastq` that can easily perform this conversion. 
+
+> **NOTE:** We do not demultiplex at this step in the workflow. You may have sequenced 6 samples, but the reads for all samples may be present all in the same BCL or FASTQ file.
+
+The generation of the count matrix from the raw sequencing data will go through similar steps for many of the scRNA-seq methods. 
+
+![](./img/sc_pre-QC_workflow.png)
+
+
+[**alevin**](https://salmon.readthedocs.io/en/latest/alevin.html) is a command-line tool that estimates expression of scRNA-seq data for which the 3' ends of transcripts were sequenced. [**umi-tools**]() and [**zUMIs**](https://github.com/sdparekh/zUMIs) are additional tools that can perform these processes. These tools incorporate collapsing of UMIs to correct for amplification bias. The steps in this process include the following:
+
+ 1. Formatting reads and filtering noisy cellular barcodes
+ 2. Demultiplexing the samples
+ 3. Mapping/pseudo-mapping to transcriptome
+ 4. Collapsing UMIs and quantification of reads
+
+If using 10X Genomics library preparation method, then the [Cell Ranger pipeline](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) would be used for all of the above steps. 
+
+
+### Formatting reads and filtering noisy cellular barcodes
+
+The FASTQ files can then be used to parse out the cell barcodes, UMIs, and sample barcodes. For droplet-based methods, many of the cellular barcodes will match a low number of reads (< 1000 reads) due to:
+
+- encapsulation of free floating RNA from dying cells
+- simple cells (RBCs, etc.) expressing few genes
+- cells that failed for some reason
+
+These excess barcodes need to be filtered out of the sequence data prior to read alignment. To do this filtering, the 'cellular barcode' and the 'molecular barcode' are extracted and saved for each cell. For example, if using 'umis' tools, the information is added to the header line for each read, with the following format:
+```{}
+    @HWI-ST808:130:H0B8YADXX:1:1101:2088:2222:CELL_GGTCCA:UMI_CCCT
+    AGGAAGATGGAGGAGAGAAGGCGGTGAAAGAGACCTGTAAAAAGCCACCGN
+    +
+    @@@DDBD>=AFCF+<CAFHDECII:DGGGHGIGGIIIEHGIIIGIIDHII#
+```
+Known cellular barcodes used in the library preparation method should be known, and unknown
+barcodes would be dropped, while allowing for an acceptable number of mismatches to the known cellular barcodes.
+
+### Demultiplexing sample reads
+
+The next step of the process is to demultiplex the samples, if sequencing more than a single sample. This is the one step of this process not handled by the 'umis' tools, but is accomplished by 'zUMIs'. We would need to parse the reads to determine the sample barcode associated with each cell.
+
+### Mapping/pseudo-mapping to cDNAs
+
+To determine which gene the read originated from, the reads are aligned using traditional (STAR) or light-weight methods (Kallisto/RapMap).
+
+### Collapsing UMIs and quantification of reads
+
+The duplicate UMIs are collapsed, and only the unique UMIs are quantified using a tool like Kallisto or featureCounts. The resulting output is a cell by gene matrix of counts:
+
+![](./img/count_matrix2.png)
+
+_**Image credit:** extracted from Lafzi et al. Tutorial: guidelines for the experimental design of single-cell RNA sequencing studies, Nature Protocols 2018 (https://doi.org/10.1038/s41596-018-0073-y)_
+
+Each value in the matrix represents the number of reads in a cell originating from the corresponding gene. Using the count matrix, we can explore and filter the data, keeping only the higher quality cells.
+
+***
+
+
+# Quality Control Set-up
+
+
+## Learning Objectives
+
+* Understand how to bring in data from single-cell RNA-seq experiments
+
+
+![](./img/sc_workflow_integration.png)
+
+
+After quantifying gene expression we need to bring this data into R to generate metrics for performing QC. In this lesson we will talk about the format(s) count data can be expected in, and how to read it into R so we can move on to the QC step in the workflow. We will also discuss the dataset we will be using and the associated metadata.
+
+***
+
+## Exploring the example dataset
+
+For this lesson we will be working with a single-cell RNA-seq dataset which is part of a larger study from [Kang et al, 2017](https://www.nature.com/articles/nbt.4042). In this paper, the authors present a a computational algorithm that harnesses genetic variation (eQTL) to determine the genetic identity of each droplet containing a single cell (singlet) and identify droplets containing two cells from different individuals (doublets).
+
+The data used to test their algorithm is comprised of pooled Peripheral Blood Mononuclear Cells (PBMCs) taken from eight lupus patients, split into control and interferon beta-treated (stimulated) conditions. 
+
+
+![](./img/kangetal_image.png)
+
+*Image credit: [Kang et al, 2017](https://www.nature.com/articles/nbt.4042)*
+
+### Raw data
+
+This dataset is available on GEO ([GSE96583](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE96583)), however the available counts matrix lacked mitochondrial reads, so we downloaded the BAM files from the SRA ([SRP102802](https://www-ncbi-nlm-nih-gov.ezp-prod1.hul.harvard.edu/sra?term=SRP102802)). These BAM files were converted back to FASTQ files, then run through [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) to obtain the count data that we will be using.
+
+> **NOTE:**  The counts for this dataset is also freely available from 10X Genomics and is used as part of the [Seurat tutorial](https://satijalab.org/seurat/v3.0/immune_alignment.html). 
+
+### Metadata
+
+In addition to the raw data, we also need to collect **information about the data**; this is known as **metadata**. There is often a temptation to just start exploring the data, but it is not very meaningful if we know nothing about the samples that this data originated from.
+
+Some relevant metadata for our dataset is provided below:
+
+* The libraries were prepared using 10X Genomics version 2 chemistry
+* The samples were sequenced on the Illumina NextSeq 500
+* PBMC samples from eight individual lupus patients were separated into two aliquots each. 
+  * One aliquot of PBMCs was activated by 100 U/mL of recombinant IFN-Î² for 6 hours. 
+  * The second aliquot was left untreated. 
+  * After 6 hours, the eight samples for each condition were pooled together in two final pools (stimulated cells and control cells). We will be working with these two, pooled samples. (*We did not demultiplex the samples because SNP genotype information was used to demultiplex in the paper and the barcodes/sample IDs were not readily available for this data. Generally, you would demultiplex and perform QC on each individual sample rather than pooling the samples.*)
+* 12,138 and 12,167 cells were identified (after removing doublets) for control and stimulated pooled samples, respectively.
+
+* Since the samples are PBMCs, we will expect immune cells, such as:
+  * B cells
+  * T cells
+  * NK cells
+  * monocytes
+  * macrophages
+  * possibly megakaryocytes
+  
+> It is recommended that you have some expectation regarding the cell types you expect to see in a dataset prior to performing the QC. This will inform you if you have any cell types with low complexity (lots of transcripts from a few genes) or cells with higher levels of mitochondrial expression. This will enable us to account for these biological factors during the analysis workflow.
+
+None of the above cell types are expected to be low complexity or anticipated to have high mitochondrial content.
+
+
+### Loading libraries 
+
+Now, we can load the necessary libraries:
+
+```{r setup, include=FALSE}
+# Load libraries
+options(future.globals.maxSize = 8000 * 1024^2)
+library(SeuratWrappers)
+library(monocle3)
+library(SingleCellExperiment)
+library(Seurat)
+library(tidyverse)
+library(Matrix)
+library(scales)
+library(cowplot)
+library(RCurl)
+```
+
+## Loading single-cell RNA-seq count data 
+
+Regardless of the technology or pipeline used to process your single-cell RNA-seq sequence data, the output will generally be the same. That is, for each individual sample you will have the following **three files**:
+
+1. a file with the **cell IDs**, representing all cells quantified
+2. a file with the **gene IDs**, representing all genes quantified
+3. a **matrix of counts** per gene for every cell
+
+We can explore these files by clicking on the `data/ctrl_raw_feature_bc_matrix` folder:
+
+### `barcodes.tsv` 
+This is a text file which contains all cellular barcodes present for that sample. Barcodes are listed in the order of data presented in the matrix file (i.e. these are the column names). 
+![](./img/cell_ids_new.png)
+
+  
+
+### `features.tsv`
+This is a text file which contains the identifiers of the quantified genes. The source of the identifier can vary depending on what reference (i.e. Ensembl, NCBI, UCSC) you use in the quantification methods, but most often these are official gene symbols. The order of these genes corresponds to the order of the rows in the matrix file (i.e. these are the row names).
+![](./img/genes.png)
+
+
+### `matrix.mtx`
+This is a text file which contains a matrix of count values. The rows are associated with the gene IDs above and columns correspond to the cellular barcodes. Note that there are **many zero values** in this matrix.
+
+
+![](./img/sparse_matrix.png)
+
+
+Loading this data into R requires us to **use functions that allow us to efficiently combine these three files into a single count matrix.** However, instead of creating a regular matrix data structure, the functions we will use create a **sparse matrix** to improve the amount of space, memory and CPU required to work with our huge count matrix. 
+
+Different methods for reading in data include:
+
+1. **`readMM()`**: This function is from the **Matrix** package and will turn our standard matrix into a sparse matrix. The `features.tsv` file and `barcodes.tsv` must first be individually loaded into R and then they are combined. For specific code and instructions on how to do this please see [our additional material](../lessons/readMM_loadData.md).
+2. **`Read10X()`**: This function is from the **Seurat** package and will use the Cell Ranger output directory as input. In this way individual files do not need to be loaded in, instead the function will load and combine them into a sparse matrix for you. *We will be using this function to load in our data!*
+
+
+### Reading in a single sample (`read10X()`)
+
+When working with 10X data and its proprietary software Cell Ranger, you will always have an `outs` directory. Within this directory you will find a number of different files including:
+
+- **`web_summary.html`:** report that explores different QC metrics, including the mapping metrics, filtering thresholds, estimated number of cells after filtering, and information on the number of reads and genes per cell after filtering.
+- **BAM alignment files:** files used for visualization of the mapped reads and for re-creation of FASTQ files, if needed
+- **`filtered_feature_bc_matrix`:** folder containing all files needed to construct the count matrix using data filtered by Cell Ranger
+- **`raw_feature_bc_matrix`:** folder containing all files needed to construct the count matrix using the raw unfiltered data
+
+We are mainly interested in the `raw_feature_bc_matrix` as we wish to perform our own QC and filtering while accounting for the biology of our experiment/biological system.
+
+If we had a single sample, we could generate the count matrix and then subsequently create [a Seurat object](https://github.com/satijalab/seurat/wiki/Seurat):
+
+```{r, echo=T,eval=T,message=T,warning=T,error=TRUE}
+# How to read in 10X data for a single sample (output is a sparse matrix)
+ctrl_counts <- Read10X(data.dir = "data/ctrl_raw_feature_bc_matrix")
+
+# Turn count matrix into a Seurat object (output is a Seurat object)
+ctrl <- CreateSeuratObject(counts = ctrl_counts,
+                           min.features = 100)
+```
+
+> **NOTE**: The `min.features` argument specifies the minimum number of genes that need to be detected per cell. This argument will filter out poor quality cells that likely just have random barcodes encapsulated without any cell present. Usually, cells with less than 100 genes detected are not considered for analysis.
+
+
+**Seurat automatically creates some metadata** for each of the cells when you use the `Read10X()` function to read in data. This information is stored in the `meta.data` slot within the Seurat object (see more in the note below). 
+
+> The Seurat object is a custom list-like object that has well-defined spaces to store specific information/data. You can find more information about the slots in the Seurat object [at this link](https://github.com/satijalab/seurat/wiki/Seurat).
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Explore the metadata
+head(ctrl@meta.data)
+```
+
+What do the columns of metadata mean?
+
+- `orig.ident`: this often contains the sample identity if known, but will default to "SeuratProject"
+- `nCount_RNA`: number of UMIs per cell
+- `nFeature_RNA`: number of genes detected per cell
+
+### Reading in multiple samples with a `for loop`
+
+In practice, you will likely have several samples that you will need to read in data for using one of the 2 functions we discussed earlier (`Read10X()` or `readMM()`). So, to make the data import into R more efficient we can use a `for` loop, that will interate over a series of commands for each of the inputs given. 
+
+In R, it has the following structure/syntax:
+
+```{}
+## DO NOT RUN
+
+for (variable in input){
+	command1
+	command2
+	command3
+}
+```
+
+The `for` loop we will be using today will iterate over the two sample "files" and execute two commands for each sample - (1) read in the count data (`Read10X()`) and (2) create the Seurat objects from the read in data (`CreateSeuratObject()`):
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Create each individual Seurat object for every sample
+for (file in c("ctrl_raw_feature_bc_matrix", "stim_raw_feature_bc_matrix")){
+        seurat_data <- Read10X(data.dir = paste0("data/", file))
+        seurat_obj <- CreateSeuratObject(counts = seurat_data, 
+                                         min.features = 100, 
+                                         project = file)
+        assign(file, seurat_obj)
+}
+```
+
+> We can break down the `for loop` to describe the different lines of code:
+> 
+> #### Step 1: Specify inputs
+> 
+> For this dataset, we have two samples that we would like to create a Seurat object for:
+> 
+> - `ctrl_raw_feature_bc_matrix` 
+> - `stim_raw_feature_bc_matrix`
+> 
+> We can specify these samples in the *input* part for our `for loop` as elements of a vector using `c()`. We are assigning these to a *variable* and we can call that variable anything we would like (try to give it a name that makes sense). In this example, we called the *variable* `file`. 
+> 
+> > During the execution of the above loop, `file` will first contain the value *"ctrl_raw_feature_bc_matrix"*, run through the commands all the way through to `assign()`. Next, it will contain the value *"stim_raw_feature_bc_matrix"* and once again run through all the commands. If you had 15 folders as input, instead of 2, the above code will run through 15 times, for each of your data folders.
+> 
+> ```{}
+> ## DO NOT RUN
+> 
+> # Create each individual Seurat object
+> for (file in c("ctrl_raw_feature_bc_matrix", "stim_raw_feature_bc_matrix")){
+> ```
+> 
+> #### Step 2: Read in data for the input
+> 
+> We can continue our `for loop` by adding a line to read in data with `Read10X()`:
+> 
+> - Here, we need to specify the path to the file, so we will prepend the `data/` directory to our sample folder name using the `paste0()` function.
+> 
+> ```{}
+> ## DO NOT RUN
+> 
+>         seurat_data <- Read10X(data.dir = paste0("data/", file))
+> ```
+> 
+> #### Step 3: Create Seurat object from the 10X count data
+> 
+> Now, we can create the Seurat object by using the `CreateSeuratObject()` function, adding in the argument `project`, where we can add the sample name.
+> 
+> ```{}
+> ## DO NOT RUN
+> 
+>         seurat_obj <- CreateSeuratObject(counts = seurat_data, 
+>                                          min.features = 100, 
+>                                          project = file)        
+> ```
+> 
+> #### Step 4: Assign Seurat object to a new variable based on sample
+> 
+> The last command `assign`s the Seurat object created (`seurat_obj`) to a new variable. In this way, when we iterate and move on to the next sample in our `input` we will not overwrite the Seurat object created in the previous iteration:
+> 
+> ```{}
+> ## DO NOT RUN
+>   
+>         assign(file, seurat_obj)
+> }
+> ```
+
+Now that we have created both of these objects, let's take a quick look at the metadata to see how it looks:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Check the metadata in the new Seurat objects
+head(ctrl_raw_feature_bc_matrix@meta.data)
+head(stim_raw_feature_bc_matrix@meta.data)
+```
+
+Next, we need to merge these objects together into a single Seurat object. This will make it easier to run the QC steps for both sample groups together and enable us to easily compare the data quality for all the samples.  
+
+We can use the `merge()` function from the Seurat package to do this:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Create a merged Seurat object
+merged_seurat <- merge(x = ctrl_raw_feature_bc_matrix, 
+                       y = stim_raw_feature_bc_matrix, 
+                       add.cell.id = c("ctrl", "stim"))
+```
+
+Because the same cell IDs can be used for different samples, we add a **sample-specific prefix** to each of our cell IDs using the `add.cell.id` argument. If we look at the metadata of the merged object we should be able to see the prefixes in the rownames:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Check that the merged object has the appropriate sample-specific prefixes
+head(merged_seurat@meta.data)
+tail(merged_seurat@meta.data)
+```
+
+
+
+
+
+
+
+
+
+# Quality Control Analysis
+
+## Learning Objectives
+
+* Construct QC metrics and associated plots to visually explore the quality of the data
+* Evaluate the QC metrics and set filters to remove low quality cells
+
+
+![](./img/sc_workflow_integration.png)
+
+***
+
+Each step of this workflow has its own goals and challenges. For QC of our raw count data, they include:
+
+_**Goals:**_ 
+ 
+ - _To **filter the data to only include true cells that are of high quality**, so that when we cluster our cells it is easier to identify distinct cell type populations_
+ - _To **identify any failed samples** and either try to salvage the data or remove from analysis, in addition to, trying to understand why the sample failed_
+
+_**Challenges:**_
+ 
+ - _Delineating cells that are **poor quality from less complex cells**_
+ - _Choosing appropriate thresholds for filtering, so as to **keep high quality cells without removing biologically relevant cell types**_
+
+_**Recommendations:**_
+ 
+ - _Have a good idea of your expectations for the **cell types to be present** prior to performing the QC. For instance, do you expect to have low complexity cells or cells with higher levels of mitochondrial expression in your sample? If so, then we need to account for this biology when assessing the quality of our data._
+
+***
+
+## Generating quality metrics
+
+When data is loaded into Seurat and the initial object is created, there is some basic metadata asssembled for each of the cells in the count matrix. To take a close look at this metadata, let's view the data frame stored in the `meta.data` slot of our `merged_seurat` object:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Explore merged metadata
+View(merged_seurat@meta.data)
+```
+
+![](./img/merged_seurat_meta.png)
+
+
+There are three columns of information:
+
+- `orig.ident`: this column will contain the sample identity if known. It will default to the value we provided for the `project` argument when loading in the data
+- `nCount_RNA`: this column represents  the number of UMIs per cell
+- `nFeature_RNA`: this column represents the number of genes detected per cell
+
+In order to create the appropriate plots for the quality control analysis, we need to calculate some additional metrics. These include:
+
+- **number of genes detected per UMI:** this metric with give us an idea of the complexity of our dataset (more genes detected per UMI, more complex our data)
+- **mitochondrial ratio:** this metric will give us a percentage of cell reads originating from the mitochondrial genes
+
+### Number of genes detected per UMI
+
+This value is quite easy to calculate, as we take the log10 of the number of genes detected per cell and the log10 of the number of UMIs per cell, then divide the log10 number of genes by the log10 number of UMIs.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Add number of genes per UMI for each cell to metadata
+merged_seurat$log10GenesPerUMI <- log10(merged_seurat$nFeature_RNA) / log10(merged_seurat$nCount_RNA)
+```
+
+### Mitochondrial Ratio
+
+Seurat has a convenient function that allows us to calculate the **proportion of transcripts mapping to mitochondrial genes**. The `PercentageFeatureSet()` function takes in a `pattern` argument and searches through all gene identifiers in the dataset for that pattern. Since we are looking for mitochondrial genes, we are searching any gene identifiers that begin with the pattern "MT-". For each cell, the function takes the sum of counts across all genes (features) belonging to the "Mt-" set, and then divides by the count sum for all genes (features). This value is multiplied by 100 to obtain a percentage value. 
+
+> *For our analysis, rather than using a percentage value we would prefer to work with the ratio value. As such, we will reverse that last step performed by the function by taking the output value and dividing by 100*.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Compute percent mito ratio
+merged_seurat$mitoRatio <- PercentageFeatureSet(object = merged_seurat, pattern = "^MT-")
+merged_seurat$mitoRatio <- merged_seurat@meta.data$mitoRatio / 100
+
+```
+> **NOTE:** The pattern provided ("^MT-") works for human gene names. You may need to adjust the pattern argument depending on your organism of interest. Additionally, if you weren't using gene names as the gene ID then this function wouldn't work as we have used it above as the pattern will not suffice. Since there are caveats to using this function, it is advisable to manually compute this metric. If you are interested, we have [code available to compute this metric on your own](https://github.com/hbctraining/scRNA-seq/blob/master/lessons/mitoRatio.md).
+
+
+### Additional metadata columns
+
+We are a now all set with quality metrics required for assessing our data. However, we would like to **include some additional information** that would be useful to have in our metadata including **cell IDs and condition information**.
+
+When we added columns of information to our metadata file above, we simply added it directly to the metadata slot in the Seurat object using the `$` operator. We could continue to do so for the next few columns of data, but instead we will extract the dataframe into a separate variable. In this way we can work with the metadata data frame as a seperate entity from the seurat object without the risk of affecting any other data stored inside the object.
+ 
+Let's begin by creating the `metadata` dataframe by extracting the `meta.data` slot from the Seurat object: 
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Create metadata dataframe
+metadata <- merged_seurat@meta.data
+```
+
+Next, we'll add a **new column for cell identifiers**. This information is currently located in the row names of our metadata dataframe. We will keep the rownames as is and duplicate it into a new column called `cells`:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Add cell IDs to metadata
+metadata$cells <- rownames(metadata)
+```
+
+You should see that each cell ID has a `ctrl_` or `stim_` prefix as we had specified when we merged the Seurat objects. We can use this prefix to create a **new column indicating which condition** each cell is classfied under. We will call this column `sample`:
+
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Create sample column
+metadata$sample <- NA
+metadata$sample[which(str_detect(metadata$cells, "^ctrl_"))] <- "ctrl"
+metadata$sample[which(str_detect(metadata$cells, "^stim_"))] <- "stim"
+```
+
+And finally, we will **rename some of the existing columns** in our metadata dataframe to be more intuitive:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+
+# Rename columns
+metadata <- metadata %>%
+        dplyr::rename(seq_folder = orig.ident,
+                      nUMI = nCount_RNA,
+                      nGene = nFeature_RNA)
+```
+
+
+
+Now you are **all setup with the metrics you need to assess the quality of your data**! Your final metadata table will have rows that correspond to each cell, and columns with information about those cells:
+
+![](./img/metadata_scrnaseq_new.png)
+
+
+
+
+### Saving the updated metadata to our Seurat object
+
+Before we assess our metrics we are going to save all of the work we have done thus far back into our Seurat object. We can do this by simply assigning the dataframe into the `meta.data` slot:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Add metadata back to Seurat object
+merged_seurat@meta.data <- metadata
+                           
+# Create .RData object to load at any time
+save(merged_seurat, file="data/merged_filtered_seurat.RData")
+```
+
+## Assessing the quality metrics
+
+Now that we have generated the various metrics to assess, we can explore them with visualizations. We will assess various metrics and then decide on which cells are low quality and should be removed from the analysis:
+
+- Cell counts
+- UMI counts per cell
+- Genes detected per cell
+- UMIs vs. genes detected
+- Mitochondrial counts ratio
+- Novelty
+
+> **What about doublets?** In single-cell RNA sequencing experiments, doublets are generated from two cells. They typically arise due to errors in cell sorting or capture, especially in droplet-based protocols involving thousands of cells. Doublets are obviously undesirable when the aim is to characterize populations at the single-cell level. In particular, they can incorrectly suggest the existence of intermediate populations or transitory states that do not actually exist. Thus, it is desirable to remove doublet libraries so that they do not compromise interpretation of the results.
+
+> **Why aren't we checking for doublets?** Many workflows use maximum thresholds for UMIs or genes, with the idea that a much higher number of reads or genes detected indicate multiple cells. While this rationale seems to be intuitive, it is not accurate. Also, many of the tools used to detect doublets tend to get rid of cells with intermediate or continuous phenotypes, although they may work well on datasets with very discrete cell types. [Scrublet](https://github.com/AllonKleinLab/scrublet) is a popular tool for doublet detection, but we haven't adequately benchmarked it yet. Currently, we recommend not including any thresholds at this point in time. When we have identified markers for each of the clusters, we suggest exploring the markers to determine whether the markers apply to more than one cell type.
+
+### Cell counts
+
+The cell counts are determined by the number of unique cellular barcodes detected. For this experiment, between 12,000 -13,000 cells are expected.
+
+In an ideal world, you would expect the number of unique cellular barcodes to correpsond to the number of cells you loaded. However, this is not the case as capture rates of cells are only a proportion of what is loaded. For example, the inDrops cell **capture efficiency** is higher (70-80%) compared to 10X which is between 50-60%.
+
+> _**NOTE:** The capture efficiency could appear much lower if the cell concentration used for library preparation was not accurate. Cell concentration should NOT be determined by FACS machine or Bioanalyzer (these tools are not accurate for concentration determination), instead use a hemocytometer or automated cell counter for calculation of cell concentration._
+
+The cell numbers can also vary by protocol, **producing cell numbers that are much higher than what we loaded**. For example, during the inDrops protocol, the cellular barcodes are present in the hydrogels, which are encapsulated in the droplets with a single cell and lysis/reaction mixture. While each hydrogel should have a single cellular barcode associated with it, occasionally a hydrogel can have more than one cellular barcode. Similarly, with the 10X protocol there is a chance of obtaining only a barcoded bead in the emulsion droplet (GEM) and no actual cell.  Both of these, in addition to the presence of dying cells can lead to a higher number of cellular barcodes than cells.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the number of cell counts per sample
+metadata %>% 
+  	ggplot(aes(x=sample, fill=sample)) + 
+  	geom_bar() +
+  	theme_classic() +
+  	theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  	theme(plot.title = element_text(hjust=0.5, face="bold")) +
+  	ggtitle("NCells")
+```
+
+We see over 15,000 cells per sample, which is quite a bit more than the 12-13,000 expected. It is clear that we likely have some junk 'cells' present.
+
+### UMI counts (transcripts) per cell
+
+The UMI counts per cell should generally be above 500, that is the low end of what we expect. If UMI counts are between 500-1000 counts, it is usable but the cells probably should have been sequenced more deeply. 
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the number UMIs/transcripts per cell
+metadata %>% 
+  	ggplot(aes(color=sample, x=nUMI, fill= sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	ylab("Cell density") +
+  	geom_vline(xintercept = 500)
+```
+
+
+
+We can see that majority of our cells in both samples have 1000 UMIs or greater, which is great. 
+
+
+### Genes detected per cell
+
+We have similar expectations for gene detection as for UMI detection, although it may be a bit lower than UMIs. For high quality data, the proportional histogram should contain **a single large peak that represents cells that were encapsulated**. If we see a **small shoulder** to the left of the major peak (not present in our data), or a bimodal distribution of the cells, that can indicate a couple of things. It might be that there are a set of **cells that failed** for some reason. It could also be that there are **biologically different types of cells** (i.e. quiescent cell populations, less complex cells of interest), and/or one type is much smaller than the other (i.e. cells with high counts may be cells that are larger in size). Therefore, this threshold should be assessed with other metrics that we describe in this lesson.
+ 
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the distribution of genes detected per cell via histogram
+metadata %>% 
+  	ggplot(aes(color=sample, x=nGene, fill= sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	theme_classic() +
+  	scale_x_log10() + 
+  	geom_vline(xintercept = 300)
+
+# Visualize the distribution of genes detected per cell via boxplot
+metadata %>% 
+  	ggplot(aes(x=sample, y=log10(nGene), fill=sample)) + 
+  	geom_boxplot() + 
+  	theme_classic() +
+  	theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  	theme(plot.title = element_text(hjust=0.5, face="bold")) +
+  	ggtitle("NCells vs NGenes")
+```
+
+
+
+### UMIs vs. genes detected
+
+Two metrics that are often evaluated together are the number of UMIs and the number of genes detected per cell. Here, we have plotted the **number of genes versus the number of UMIs coloured by the fraction of mitochondrial reads**. Mitochondrial read fractions are only high in particularly low count cells with few detected genes (darker colored data points). This could be indicative of damaged/dying cells whose cytoplasmic mRNA has leaked out through a broken membrane, and thus, only mRNA located in the mitochondria is still conserved. These cells are filtered out by our count and gene number thresholds. Jointly visualizing the count and gene thresholds shows the **joint filtering effect**.
+
+Cells that are **poor quality are likely to have low genes and UMIs per cell**, and correspond to the data points in the bottom left quadrant of the plot. Good cells will generally exhibit both higher number of genes per cell and higher numbers of UMIs. 
+
+With this plot we also evaluate the **slope of the line**, and any scatter of data points in the bottom right hand quadrant of the plot. These cells have a high number of UMIs but only a few number of genes. These could be dying cells, but also could represent a population of a low complexity celltype (i.e red blood cells).
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+metadata %>% 
+  	ggplot(aes(x=nUMI, y=nGene, color=mitoRatio)) + 
+  	geom_point() + 
+	scale_colour_gradient(low = "gray90", high = "black") +
+  	stat_smooth(method=lm) +
+  	scale_x_log10() + 
+  	scale_y_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 500) +
+  	geom_hline(yintercept = 250) +
+  	facet_wrap(~sample)
+```
+### Mitochondrial counts ratio
+
+This metric can identify whether there is a large amount of **mitochondrial contamination from dead or dying cells**. We define poor quality samples for mitochondrial counts as cells which surpass the 0.2 mitochondrial ratio mark, unless of course you are expecting this in your sample.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the distribution of mitochondrial gene expression detected per cell
+metadata %>% 
+  	ggplot(aes(color=sample, x=mitoRatio, fill=sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 0.2)
+```
+
+
+### Complexity
+
+We can evaluate each cell in terms of how complex the RNA species are by using a measure called the novelty score. The novelty score is computed by taking the ratio of nGenes over nUMI. If there are many captured transcripts (high nUMI) and a low number of genes detected in a cell, this likely means that you only captured a low number of genes and simply sequenced transcripts from those lower number of genes over and over again. These low complexity (low novelty) cells could represent a specific cell type (i.e. red blood cells which lack a typical transcriptome), or could be due to some other strange artifact or contamination. Generally, we expect the novelty score to be above 0.80 for good quality cells.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI
+metadata %>%
+  	ggplot(aes(x=log10GenesPerUMI, color = sample, fill=sample)) +
+  	geom_density(alpha = 0.2) +
+  	theme_classic() +
+  	geom_vline(xintercept = 0.8)
+```
+> **NOTE:** **Reads per cell** is another metric that can be useful to explore; however, the workflow used would need to save this information to assess. Generally, with this metric you hope to see all of the samples with peaks in relatively the same location between 10,000 and 100,000 reads per cell. 
+
+
+## Filtering
+
+In conclusion, considering any of these QC metrics in isolation can lead to misinterpretation of cellular signals. For example, cells with a comparatively high fraction of mitochondrial counts may be involved in respiratory processes and may be cells that you would like to keep. Likewise, other metrics can have other biological interpretations. Thus, always **consider the joint effects of these metrics when setting thresholds and set them to be as permissive as possible to avoid filtering out viable cell populations unintentionally**. 
+
+### Cell-level filtering
+
+Now that we have visualized the various metrics, we can decide on the thresholds to apply which will result in the removal of low quality cells. Often the recommendations mentioned earlier are a rough guideline, and the specific experiment needs to inform the exact thresholds chosen. We will use the following thresholds:
+
+- nUMI > 500
+- nGene > 250
+- log10GenesPerUMI > 0.8
+- mitoRatio < 0.2
+
+To filter, we wil go back to our Seurat object and use the `subset()` function:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Filter out low quality cells using selected thresholds - these will change with experiment
+filtered_seurat <- subset(x = merged_seurat, 
+                         subset= (nUMI >= 500) & 
+                           (nGene >= 250) & 
+                           (log10GenesPerUMI > 0.80) & 
+                           (mitoRatio < 0.20))
+			                          
+```
+
+### Gene-level filtering
+
+Within our data we will have many genes with zero counts. These genes can dramatically reduce the average expression for a cell and so we will remove them from our data. We will start by identifying which genes have a zero count in each cell:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Extract counts
+counts <- GetAssayData(object = filtered_seurat, slot = "counts")
+
+# Output a logical matrix specifying for each gene on whether or not there are more than zero counts per cell
+nonzero <- counts > 0
+```
+
+Now, we will perform some filtering by prevalence. If a gene is only expressed in a handful of cells, it is not particularly meaningful as it still brings down the averages for all other cells it is not expressed in. For our data we choose to **keep only genes which are expressed in 10 or more cells.** By using this filter, genes which have zero counts in all cells will effectively be removed.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+
+# Sums all TRUE values and returns TRUE if more than 10 TRUE values per gene
+keep_genes <- Matrix::rowSums(nonzero) >= 10
+
+# Only keeping those genes expressed in more than 10 cells
+filtered_counts <- counts[keep_genes, ]
+```
+
+Finally, take those filtered counts and create a new Seurat object for downstream analysis.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Reassign to filtered Seurat object
+filtered_seurat <- CreateSeuratObject(filtered_counts, meta.data = filtered_seurat@meta.data)
+```
+
+## Re-assess QC metrics
+
+After performing the filtering, it's recommended to look back over the metrics to make sure that your data matches your expectations and is good for downstream analysis. 
+
+***
+
+**[Exercises](../lessons/sc_exercises_qc_analysis.md)**
+
+1. Extract the new metadata from the filtered Seurat object using the code provided below:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+	# Save filtered subset to new metadata
+	metadata_clean <- filtered_seurat@meta.data
+```
+
+2. Perform all of the same plots using the filtered data as we had done with the unfiltered data and answer the following questions:
+
+	1. **Cell counts**: Do the Ctrl and Stim group have similar cell counts after filtering?
+	1. **UMI counts** (transcripts) per cell: Do you observe the removal of any cells with less than 500 UMI?
+	1. **Genes detected per cell**: Do you observe the removal of any cells with less than 250 genes?
+	1. **UMIs vs. genes detected**: Do you observe any cells with a high number of UMIs but only a few number of genes?
+	1. **Mitochondrial counts ratio**: Do you observe the removal of cells with more than 0.2 mitochondrial counts ratio?
+	1. **Complexity**: Do you observe the removal of cells with less than 0.8 log10GenesPerUMI?
+
+***
+
+## Saving filtered cells
+
+Based on these QC metrics we would identify any failed samples and move forward with our filtered cells. Often we iterate through the QC metrics using different filtering criteria; it is not necessarily a linear process. When satisfied with the filtering criteria, we would save our filtered cell object for clustering and marker identification.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Create .RData object to load at any time
+save(filtered_seurat, file="data/seurat_filtered.RData")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Theory of normalization and PCA
+
+
+## Learning Objectives 
+
+* Understand normalizing counts is necessary for accurate comparison between cells
+* Understand how similarity in cellular gene expression between cells can be evaluated by Principal Components Analysis (PCA)
+
+## Count Normalization and Principal Component Analysis
+
+After attaining our high quality single cells, the next step in the single-cell RNA-seq (scRNA-seq) analysis workflow is to perform clustering. The goal of clustering is to separate different cell types into unique clusters of cells. To perform clustering, we determine the genes that are most different in their expression between cells. Then, we use these genes to determine which correlated genes sets are responsible for the largest differences in expression between cells.
+
+![](./img/sc_workflow_integration.png)
+
+However, before we move onto clustering, there are a few concepts that we want to talk about.
+
+### Count normalization
+
+First one is count normalization, which is essential to make accurate comparisons of gene expression between cells (or samples). The counts of mapped reads for each gene is proportional to the expression of RNA ("interesting") in addition to many other factors ("uninteresting"). Normalization is the process of scaling raw count values to account for the "uninteresting" factors. In this way the expression levels are more comparable between and/or within cells.
+
+The main factors often considered during normalization are:
+ 
+ - **Sequencing depth:** Accounting for sequencing depth is necessary for comparison of gene expression between cells. In the example below, each gene appears to have doubled in expression in cell 2, however this is a consequence of cell 2 having twice the sequencing depth.
+
+![](./img/sequencing_depth.png)
+
+
+Each cell in scRNA-seq will have a differing number of reads associated with it. So to accurately compare expression between cells, it is necessary to normalize for sequencing depth.
+ 
+ - **Gene length:** Accounting for gene length is necessary for comparing expression between different genes within the same cell. The number of reads mapped to a longer gene can appear to have equal count/expression as a shorter gene that is more highly expressed. 
+
+![](./img/length_of_gene.png)
+
+
+
+In scRNA-seq analysis, we will be comparing the expression of different genes within the cells to cluster the cells. *If using a 3' or 5' droplet-based method, the length of the gene will not affect the analysis because only the 5' or 3' end of the transcript is sequenced.* However, if using full-length sequencing, the transcript length should be accounted for.
+
+### Principal Component Analysis (PCA)
+
+Principal Component Analysis (PCA) is a technique used to emphasize variation as well as similarity, and to bring out strong patterns in a dataset; it is one of the methods used for *"dimensionality reduction"*. We will briefly go over PCA in this lesson (adapted from StatQuests/Josh Starmer's YouTube video), but we strongly encourage you to explore the video [StatQuest's video](https://www.youtube.com/watch?v=_UVHneBUBW0) for a more thorough explanation/understanding. 
+
+#### Basic explanation with a simple example
+
+Let's say you had quantified the expression of four genes in two samples (or cells), you could plot the expression values of those genes with one sample represented on the x-axis and the other sample on the y-axis as shown below:
+
+![](./img/PCA_2sample_genes.png)
+
+
+You could draw a line through the data in the direction representing the **most variation**, which is on the diagonal in this example. The maximum variation in the dataset is between the genes that make up the two endpoints of this line.  
+
+We also see the genes vary somewhat above and below the line. We could draw another line through the data representing **the second most amount of variation** in the data, since this plot is in 2D (2 axes).
+
+![](./img/PCA_2sample_variation1.png)
+
+
+The genes near the ends of each line would be those with the highest variation; these genes have the **greatest influence** on the direction of the line, mathematically. 
+
+![](./img/PCA_2sample_variation2.png)
+
+
+For example, a small change in the value of *Gene C* would greatly change the direction of the longer line, whereas a small change in *Gene A* or *Gene D* would have little affect on it.
+
+![](./img/PCA_2sample_variation3.png)
+
+
+We could also rotate the entire plot and view the lines representing the variation as left-to-right and up-and-down. We see most of the variation in the data is left-to-right (longer line) and the second most variation in the data is up-and-down (shorter line). You can now think of these lines as the axes that represent the variation. These axes are essentially the "Principal Components", with PC1 representing the most variation in the data and PC2 representing the second most variation in the data. 
+
+![](./img/PCA_2sample_rotate.png)
+
+
+Now, what if we had three samples/cells, then we would have an extra direction in which we could have variation (3D). Therefore, if we have *N* samples/cells we would have *N*-directions of variation or *N* principal components (PCs)! Once these PCs have been calculated, the PC that deals with the largest variation in the dataset is designated PC1, and the next one is designated PC2 and so on. 
+
+Once the PCs have been determined for an dataset, we have to figure out how each sample/cell fits back into that context to enable us to visualize the similarities/dissimilarities in an intuitive manner.  The question here is "what is sample_X's score for a given PC based on the gene expression in sample_X?". This is the actual step where the dimenionality is reduced, since you plot PC scores for each sample/cell on the final PCA plot.
+
+PC scores are calculated for all sample-PC pairs as described in the steps and schematic below: 
+
+(1) First, each gene is assigned an "influence" score based on how much it influenced each PC. Genes that did not have any influence on a given PC get scores near zero, while genes with more influence receive larger scores. Genes on the ends of a PC line will have a larger influence, so they would receive larger scores but with opposite signs.
+
+![](./img/PCA_2sample_influence.png)
+
+
+(2) Once the influence has been determined, the score for each sample is calculated using the following equation:
+	
+	Sample1 PC1 score = (read count * influence) + ... for all genes
+	
+For our 2-sample example, the following is how the scores would be calculated: 
+
+	## Sample1
+	PC1 score = (4 * -2) + (1 * -10) + (8 * 8) + (5 * 1) = 51
+	PC2 score = (4 * 0.5) + (1 * 1) + (8 * -5) + (5 * 6) = -7
+	
+	## Sample2
+	PC1 score = (5 * -2) + (4 * -10) + (8 * 8) + (7 * 1) = 21
+	PC2 score = (5 * 0.5) + (4 * 1) + (8 * -5) + (7 * 6) = 8.5
+	
+Here is a schematic that goes over the first 2 steps:
+
+![](./img/PCA_simple_1.png)
+
+
+
+(3) Once these scores are calculated for all the PCs, they can be plotted on a simple scatter plot. Below is the plot for the example here, going from the 2D matrix to a 2D plot:
+
+![](./img/PCA_simple_3.png)
+
+
+
+#### scRNA-seq example 
+
+Let's say you are working with a single-cell RNA-seq dataset with *12,000 cells* and you have quantified the expression of *20,000 genes*. 
+
+![](./img/PCA_scrnaseq_1.png)
+
+
+After the PC scores have been calculated, you are looking at a matrix of 12,000 x 12,000 that represents the information about relative gene expression in all the cells. You can select the PC1 and PC2 columns and plot that in a 2D way.
+
+![](./img/PCA_scrnaseq_2.png)
+
+You can also use the PC scores from the first 40 PCs for downstream analysis like clustering, marker identification etc., since these represent the majority of the variation in the data. We will be talking a lot more about this later in this lesson.
+
+
+![](./img/PCA_scrnaseq_3.png)
+
+
+> *Note:* For datasets with a larger number of samples or cells, only the PC1 and PC2 scores for each sample/cell are usually plotted, or used for visualization. Since these PCs explain the most variation in the dataset, the expectation is that the samples/cells that are more similar to each other will cluster together with PC1 and PC2. See a real-life example below:
+
+![](./img/PCA_example_iris.png)
+
+
+
+*Image credit: [https://github.com/AshwiniRS/Medium_Notebooks/blob/master/PCA/PCA_Iris_DataSet.ipynb](https://github.com/AshwiniRS/Medium_Notebooks/blob/master/PCA/PCA_Iris_DataSet.ipynb)*
+
+
+
+
+
+
+
+
+
+# Normalization and regressing out unwanted variation
+
+
+## Learning Objectives
+
+* Execute the normalization, variance estimation, and identification of the most variable genes for each sample
+
+
+Now that we have our high quality cells, we need to first explore our data and identify any sources of unwanted variation. Then we need to normalize the data, perform variance stabilization and regress out the effects of any covariates that have an effect on our data.
+
+![](./img/sc_workflow_integration.png)
+
+
+***
+
+_**Goals:**_ 
+ 
+ - _To accurately **normalize and scale the gene expression values** to account for differences in sequencing depth and overdispersed count values._
+ - _To **identify the most variant genes** likely to be indicative of the different cell types present._
+
+_**Challenges:**_
+ 
+ - _**Checking and removing unwanted variation** so that we do not have cells clustering by artifacts downstream_
+
+_**Recommendations:**_
+ 
+ - _Have a good idea of your expectations for the **cell types to be present** prior to performing the clustering. Know whether you expect cell types of low complexity or higher mitochondrial content AND whether the cells are differentiating_
+ - _**Regress out** number of UMIs (default using sctransform), mitochondrial content, and cell cycle, if needed and appropriate for experiment, so not to drive clustering downstream_
+ 
+***
+
+
+## Set-up
+
+Let's start by creating a new script for the normalization and integration steps. Create a new script (File -> New File -> R script), and save it as `SCT_integration_analysis.R`.
+
+For the remainder of the workflow we will be mainly using functions available in the Seurat package. Therefore, we need to load the Seurat library in addition to the tidyverse library and a few others listed below. 
+
+```{}
+# Single-cell RNA-seq - normalization
+
+# Load libraries
+library(Seurat)
+library(tidyverse)
+library(RCurl)
+library(cowplot)
+```
+
+The input for this analysis is a `seurat` object. We will use the one that we created in the QC lesson called `filtered_seurat`.
+
+##  Explore sources of unwanted variation
+
+Correction for biological covariates serves to single out particular biological signals of interest, while correcting for technical covariates may be crucial to uncovering the underlying biological signal. The most common biological data correction is to remove the effects of the cell cycle on the transcriptome. This data correction can be performed by a simple linear regression against a cell cycle score which is what we will demonstrate below.
+
+The first step is to explore the data and see if we observe any effects in our data. The raw counts are not comparable between cells and we can't use them as is for our exploratory analysis. So we will **perform a rough normalization** by dividing by total counts per cell and taking the natural log. This normalization is solely for the purpose of exploring the sources of variation in our data.  
+
+> **NOTE**: Seurat recently introduced a new normalization method called  _**sctransform**_, which simultaneously performs variance stabilization and regresses out unwanted variation. This is the normalization method that we are implementing in our workflow. 
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Normalize the counts
+seurat_phase <- NormalizeData(filtered_seurat)
+```
+
+Next, we take this normalized data and check to see if data correction methods are necessary. 
+
+### Evaluating effects of cell cycle 
+
+To assign each cell a score based on its expression of G2/M and S phase markers, we can use the Seuart function `CellCycleScoring()`. This function calculates cell cycle phase scores based on canonical markers that required as input.
+
+We have provided a list of human cell cycle markers for you in the `data` folder as an Rdata file called `cycle.rda`. However, if you are not working with human data we have [additional materials](../lessons/cell_cycle_scoring.md) detailing how to acquire cell cycle markers for other organisms of interest.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Load cell cycle markers
+load("data/cycle.rda")
+
+# Score cells for cell cycle
+seurat_phase <- CellCycleScoring(seurat_phase, 
+                                 g2m.features = g2m_genes, 
+                                 s.features = s_genes)
+
+# View cell cycle scores and phases assigned to cells                                 
+View(seurat_phase@meta.data)                                
+```
+
+After scoring the cells for cell cycle, we would like to determine whether cell cycle is a major source of variation in our dataset using PCA. To perform PCA, we need to **first choose the most variable features, then scale the data**. Since highly expressed genes exhibit the highest amount of variation and we don't want our 'highly variable genes' only to reflect high expression, we need to scale the data to scale variation with expression level. The Seurat `ScaleData()` function will scale the data by:
+
+* adjusting the expression of each gene to give a mean expression across cells to be 0
+* scaling expression of each gene to give a variance across cells to be 1
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Identify the most variable genes
+seurat_phase <- FindVariableFeatures(seurat_phase, 
+                     selection.method = "vst",
+                     nfeatures = 2000, 
+                     verbose = FALSE)
+		     
+# Scale the counts
+seurat_phase <- ScaleData(seurat_phase)
+```
+
+> _**NOTE:** For the `selection.method` and `nfeatures` arguments the values specified are the default settings. Therefore, you do not necessarily need to include these in your code. We have included it here for transparency and inform you what you are using._	
+
+Now, we can perform the PCA analysis and plot the first two principal components against each other. We also split the figure by cell cycle phase, to evaluate similarities and/or differences. **We do not see large differences due to cell cycle phase. Based on this plot, we would not regress out the variation due to cell cycle.**
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Perform PCA
+seurat_phase <- RunPCA(seurat_phase)
+
+# Plot the PCA colored by cell cycle phase
+DimPlot(seurat_phase,
+        reduction = "pca",
+        group.by= "Phase",
+        split.by = "Phase")
+```
+
+
+
+> ### When should cell cycle phase be regressed out?
+> Below are two PCA plots taken from the Seurat vignette dealing with ["Cell-Cycle Scoring and Regression"](https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html).
+>
+> This first plot is similar to what we plotted above, it is a PCA prior to regression to evaluate if the cell cycle is playing a big role in driving PC1 and PC2. 
+
+> ![](./img/cell_cycle_not_regressed.png)
+> 
+> 
+>
+> Clearly, the cells are separating by cell type in this case, so the vignette suggests regressing out these effects.
+>
+> This second PCA plot is **post-regression**, and displays how effective the regression was in removing the effect we observed. 
+>
+> ![](./img/cell_cycle_regressed.png)
+> 
+
+### Evaluating effects of mitochodrial expression
+
+Mitochondrial expression is another factor which can greatly influence clustering. Oftentimes, it is useful to regress out variation due to mitochondrial expression. However, if the differences in mitochondrial gene expression represent a biological phenomenon that may help to distinguish cell clusters, then we advise not regressing this out. We can perform a quick check similar to looking at cell cycle, but we first can turn the mitochondrial ratio variable into a categorical variable based on quartiles.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Check quartile values
+summary(seurat_phase@meta.data$mitoRatio)
+
+# Turn mitoRatio into categorical factor vector based on quartile values
+seurat_phase@meta.data$mitoFr <- cut(seurat_phase@meta.data$mitoRatio, 
+                   breaks=c(-Inf, 0.0144, 0.0199, 0.0267, Inf), 
+                   labels=c("Low","Medium","Medium high", "High"))
+
+					
+# Plot the PCA colored by mitoFr
+DimPlot(seurat_phase,
+        reduction = "pca",
+        group.by= "mitoFr",
+        split.by = "mitoFr")
+```
+
+
+
+
+Based on this plot, we can see that there is a different pattern of scatter for the plot containing cells with "High" mitochondrial expression. We observe that the lobe of cells on the left-hand side of the plot is where most of the cells with high mitochondrial expression are. For all other levels of mitochondrial expression we see a more even distribution of cells across the PCA plot. Since we see this clear difference, we will regress out the 'mitoRatio' when we identify the most variant genes.
+
+
+## Normalization and regressing out sources of unwanted variation using SCTransform
+
+Now we can use the sctransform method as a **more accurate method of normalizing, estimating the variance of the raw filtered data, and identifying the most variable genes**. The sctransform method models the UMI counts using a **regularized negative binomial model** to remove the variation due to sequencing depth (total nUMIs per cell), while adjusting the variance based on pooling information across genes with similar abundances (similar to some bulk RNA-seq methods). 
+
+![](./img/sctransform_clusters2.png)
+
+_**Image credit:** Hafemeister C and Satija R. Normalization and variance stabilization of single-cell RNA-seq data using regularized negative binomial regression, bioRxiv 2019 (https://doi.org/10.1101/576827)_
+
+The **output of the model** (residuals) is the normalized expression levels for each transcript tested.
+
+Sctransform automatically accounts for cellular sequencing depth by regressing out sequencing depth (nUMIs). However, if there are other sources of uninteresting variation identified in the data during the exploration steps we can also include these. We observed little to no effect due to cell cycle phase and so we chose not to regress this out of our data. We observed some effect of mitochondrial expression and so we choose to regress this out from the data.
+
+To run the SCTransform we have the code below as an example. **Do not run this code**, as we prefer to run this for each sample separately in the next section below.
+
+```{}
+## DO NOT RUN CODE ##
+
+# SCTranform
+seurat_phase <- SCTransform(seurat_phase, vars.to.regress = c("mitoRatio"))
+
+```
+
+## Iterating over samples in a dataset
+
+Since we have two samples in our dataset (from two conditions), we want to keep them as separate objects and transform them as that is what is required for integration. We will first split the cells in `seurat_phase` object into "Control" and "Stimulated":
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Split seurat object by condition to perform cell cycle scoring and SCT on all samples
+split_seurat <- SplitObject(seurat_phase, split.by = "sample")
+
+split_seurat <- split_seurat[c("ctrl", "stim")]
+
+```
+
+Now we will **use a 'for loop'** to run the `SCTransform()` on each sample, and regress out mitochondrial expression by specifying in the `vars.to.regress` argument of the `SCTransform()` function.
+
+Before we run this `for loop`, we know that the output can generate large R objects/variables in terms of memory. If we have a large dataset, then we might need to **adjust the limit for allowable object sizes within R** (*Default is 500 * 1024 ^ 2 = 500 Mb*) using the following code:
+
+```{r, echo=T,eval=T,message=F,warning=TRUE,error=TRUE}
+options(future.globals.maxSize = 4000 * 1024^2)
+```
+
+Now, we run the following loop to **perform the sctransform on all samples**. This may take some time (~10 minutes):
+
+```{r, echo=F,eval=F,message=F,warning=F,error=F}
+
+for (i in 1:length(split_seurat)) {
+    split_seurat[[i]] <- SCTransform(split_seurat[[i]], vars.to.regress = c("mitoRatio"))
+    }
+```
+
+> _**NOTE:** By default, after normalizing, adjusting the variance, and regressing out uninteresting sources of variation, SCTransform will rank the genes by residual variance and output the 3000 most variant genes. If the dataset has larger cell numbers, then it may be beneficial to adjust this parameter higher using the `variable.features.n` argument._ 
+
+Note, the last line of output specifies "Set default assay to SCT". We can view the different assays that we have stored in our seurat object.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Check which assays are stored in objects
+split_seurat$ctrl@assays
+```
+
+Now we can see that in addition to the raw RNA counts, we now have a SCT component in our `assays` slot. The most variable features will be the only genes stored inside the SCT assay. As we move through the scRNA-seq analysis, we will choose the most appropriate assay to use for the different steps in the analysis. 
+
+***
+**Exercise**
+
+1. Are the same assays available for the "stim" samples within the `split_seurat` object? What is the code you used to check that?
+2. Any observations for the genes or features listed under *"First 10 features:"* and the *"Top 10 variable features:"* for "ctrl" versus "stim"?
+
+***
+
+### Save the object!
+
+Before finishing up, let's save this object to the `data/` folder. It can take a while to get back to this stage especially when working with large datasets, it is best practice to save the object as an easily loadable file locally.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Save the split seurat object
+saveRDS(split_seurat, "data/split_seurat.rds")
+```
+
+> To load the `.rds` file back into your environment you would use the following code:
+> ```{}
+> # Load the split seurat object into the environment
+> split_seurat <- readRDS("data/split_seurat.rds")
+> ```
+
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Integration
+
+## Learning Objectives
+
+* Perform integration of cells across conditions using the most variant genes to identify cells most similar to each other
+
+
+![](./img/sc_workflow_integration.png)
+
+
+***
+
+_**Goals:**_ 
+
+ - _To **align same cell types** across conditions._
+
+_**Challenges:**_
+ 
+ - _**Aligning cells of similar cell types** so that we do not have clustering downstream due to differences between samples, conditions, modalities, or batches_
+
+_**Recommendations:**_
+ 
+ - _Go through the analysis without integration first to determine whether integration is necessary_
+
+***
+
+## To integrate or not to integrate?
+
+Generally, we always look at our clustering **without integration** before deciding whether we need to perform any alignment. **Do not just always perform integration because you think there might be differences - explore the data.** If we had performed the normalization on both conditions together in a Seurat object and visualized the similarity between cells, we would have seen condition-specific clustering:
+
+![](./img/unintegrated_umap.png)
+
+
+Condition-specific clustering of the cells indicates that we need to integrate the cells across conditions to ensure that cells of the same cell type cluster together. In this lesson, we will cover the integration of our samples across conditions, which is adapted from the [Seurat v3 Guided Integration Tutorial](https://satijalab.org/seurat/v3.0/immune_alignment.html).
+
+> _**NOTE:** Seurat has a [vignette](https://satijalab.org/seurat/v3.1/sctransform_vignette.html) for how to run through the workflow without integration. The workflow is fairly similar to this workflow, but the samples would not necessarily be split in the beginning and integration would not be performed._
+>
+> _It can help to first run conditions individually if unsure what clusters to expect or expecting some different cell types between conditions (e.g. tumor and control samples), then run them together to see whether there are condition-specific clusters for cell types present in both conditions. Oftentimes, when clustering cells from multiple conditions there are condition-specific clusters and integration can help ensure the same cell types cluster together._
+
+
+## **Integrate** or align samples across conditions using shared highly variable genes
+
+_**If cells cluster by sample, condition, batch, dataset, modality, this integration step can greatly improve the clustering and the downstream analyses**._
+
+To integrate, we will use the shared highly variable genes (identified using SCTransform) from each group, then, we will "integrate" or "harmonize" the groups to overlay cells that are similar or have a "common set of biological features" between groups. For example, we could integrate across:
+
+- Different **conditions** (e.g. control and stimulated)
+  ![](./img/seurat_condition_integ.png)
+
+
+- Different **datasets** (e.g. scRNA-seq from datasets generated using different library preparation methods on the same samples)
+  ![](./img/seurat_dataset_integ.png)
+
+
+- Different **modalities** (e.g. scRNA-seq and scATAC-seq)
+   ![](./img/seurat_modality_integ.png)
+
+
+- Different **batches** (e.g. when experimental conditions make batch processing of samples necessary)
+
+Integration is a powerful method that uses these shared sources of greatest variation to identify shared subpopulations across conditions or datasets [[Stuart and Bulter et al. (2018)](https://www.biorxiv.org/content/early/2018/11/02/460147)]. The goal of integration is to ensure that the cell types of one condition/dataset align with the same celltypes of the other conditions/datasets (e.g. control macrophages align with stimulated macrophages).
+
+Specifically, this integration method expects "correspondences" or **shared biological states** among at least a subset of single cells across the groups. The steps in the integration analysis are outlined in the figure below:
+
+   ![](./img/integration.png)
+
+
+
+_**Image credit:** Stuart T and Butler A, et al. Comprehensive integration of single cell data, bioRxiv 2018 (https://doi.org/10.1101/460147)_
+
+The different steps applied are as follows:
+
+1. Perform **canonical correlation analysis (CCA):**
+	
+	CCA identifies shared sources of variation between the conditions/groups. It is a form of PCA, in that it **identifies the greatest sources of variation** in the data, but only if it is **shared or conserved** across the conditions/groups (using the 3000 most variant genes from each sample).
+	
+	This step roughly aligns the cells using the greatest shared sources of variation.
+
+	> _**NOTE:** The shared highly variable genes are used because they are the most likely to represent those genes distinguishing the different cell types present._
+
+2. **Identify anchors** or mutual nearest neighbors (MNNs) across datasets (sometimes incorrect anchors are identified):
+	
+	MNNs can be thought of as 'best buddies'. For each cell in one condition:
+	- The cell's closest neighbor in the other condition is identified based on gene expression values - it's 'best buddy'.
+	- The reciprocal analysis is performed, and if the two cells are 'best buddies' in both directions, then those cells will be marked as **anchors** to 'anchor' the two datasets together.
+	
+	> "The difference in expression values between cells in an MNN pair provides an estimate of the batch effect, which is made more precise by averaging across many such pairs. A correction vector is obtained and applied to the expression values to perform batch correction." [[Stuart and Bulter et al. (2018)](https://www.biorxiv.org/content/early/2018/11/02/460147)]. 
+
+3. **Filter anchors** to remove incorrect anchors:
+	
+	Assess the similarity between anchor pairs by the overlap in their local neighborhoods (incorrect anchors will have low scores) - do the adjacent cells have 'best buddies' that are adjacent to each other?
+
+4. **Integrate** the conditions/datasets:
+
+	Use anchors and corresponding scores to transform the cell expression values, allowing for the integration of the conditions/datasets (different samples, conditions, datasets, modalities)
+
+	> _**NOTE:** Transformation of each cell uses a weighted average of the two cells of each anchor across anchors of the datasets. Weights determined by cell similarity score (distance between cell and k nearest anchors) and anchor scores, so cells in the same neighborhood should have similar correction values._
+
+	**If cell types are present in one dataset, but not the other, then the cells will still appear as a separate sample-specific cluster.**
+
+
+Now, using our SCTransform object as input, let's perform the integration across conditions.
+
+
+First, we need to specify that we want to use all of the 3000 most variable genes identified by SCTransform for the integration. By default, this function only selects the top 2000 genes.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Select the most variable features to use for integration
+integ_features <- SelectIntegrationFeatures(object.list = split_seurat, 
+                                            nfeatures = 3000) 
+```
+
+> **NOTE:** If you are missing the `split_seurat` object, you can load it from your `data` folder:
+>
+> ```{}
+> # Load the split seurat object into the environment
+> split_seurat <- readRDS("data/split_seurat.rds")
+> ```
+>
+> If you do not have the `split_seurat.rds` file in your `data` folder, you can right-click [here](https://www.dropbox.com/s/l2jetffkdw8p5wc/split_seurat.rds?dl=1) to download it to the `data` folder (it may take a bit of time to download). 
+
+Now, we need to **prepare the SCTransform object** for integration.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}                                          
+# Prepare the SCT list object for integration
+split_seurat <- PrepSCTIntegration(object.list = split_seurat, 
+                                   anchor.features = integ_features)
+```
+
+Now, we are going to **perform CCA, find the best buddies or anchors and filter incorrect anchors**. For our dataset, this will take up to 15 minutes to run. *Also, note that the progress bar in your console will stay at 0%, but know that it is actually running.*
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Find best buddies - can take a while to run
+integ_anchors <- FindIntegrationAnchors(object.list = split_seurat, 
+                                        normalization.method = "SCT", 
+                                        anchor.features = integ_features)
+```
+
+Finally, we can **integrate across conditions**.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Integrate across conditions
+seurat_integrated <- IntegrateData(anchorset = integ_anchors, 
+                                   normalization.method = "SCT")
+```
+
+### UMAP visualization
+
+After integration, to visualize the integrated data we can use dimensionality reduction techniques, such as PCA and Uniform Manifold Approximation and Projection (UMAP). While PCA will determine all PCs, we can only plot two at a time. In contrast, UMAP will take the information from any number of top PCs to arrange the cells in this multidimensional space. It will take those distances in multidimensional space and plot them in two dimensions working to preserve local and global structure. In this way, the distances between cells represent similarity in expression. If you wish to explore UMAP in more detail, [this post](https://pair-code.github.io/understanding-umap/) is a nice introduction to UMAP theory.
+
+To generate these visualizations we need to first run PCA and UMAP methods. Let's start with PCA.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Run PCA
+seurat_integrated <- RunPCA(object = seurat_integrated)
+
+# Plot PCA
+PCAPlot(seurat_integrated,
+        split.by = "sample")  
+```
+
+
+
+
+
+We can see with the PCA mapping that we have a good overlay of both conditions by PCA. 
+
+Now, we can also visualize with UMAP. Let's run the method and plot.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Run UMAP
+seurat_integrated <- RunUMAP(seurat_integrated, 
+                             dims = 1:40,
+			     reduction = "pca")
+
+# Plot UMAP                             
+DimPlot(seurat_integrated)                             
+```
+
+
+
+
+> When we compare the similarity between the ctrl and stim clusters in the above plot with what we see using the the unintegrated dataset, **it is clear that this dataset benefitted from the integration!**
+> ![](./img/unintegrated_umap.png)
+
+#### Side-by-side comparison of clusters
+
+Sometimes it's easier to see whether all of the cells align well if we **split the plotting between conditions**, which we can do by adding the `split.by` argument to the `DimPlot()` function:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Plot UMAP split by sample
+DimPlot(seurat_integrated,
+        split.by = "sample")  
+```
+
+
+
+
+
+### Save the "integrated" object!
+
+Since it can take a while to integrate, it's often a good idea to **save the integrated seurat object**.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Save integrated seurat object
+saveRDS(seurat_integrated, "results/integrated_seurat.rds")
+```
+
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# clustering analysis
+
+## Learning Objectives
+
+* Utilize methods for evaluating the selection of PCs to use for clustering
+* Perform clustering of cells based on significant PCs
+
+
+Now that we have our high quality cells integrated, we want to know the different cell types present within our population of cells. 
+
+
+![](./img/sc_workflow_integration.png)
+
+
+***
+
+_**Goals:**_ 
+ 
+ - _To **generate cell type-specific clusters** and use known cell type marker genes to determine the identities of the clusters._
+ - _To **determine whether clusters represent true cell types or cluster due to biological or technical variation**, such as clusters of cells in the S phase of the cell cycle, clusters of specific batches, or cells with high mitochondrial content._
+
+_**Challenges:**_
+ 
+ - _**Identifying poor quality clusters** that may be due to uninteresting biological or technical variation_
+ - _**Identifying the cell types** of each cluster_
+ - _Maintaining patience as this can be a highly iterative process between clustering and marker identification (sometimes even going back to the QC filtering)_
+
+_**Recommendations:**_
+ 
+ - _Have a good idea of your expectations for the **cell types to be present** prior to performing the clustering. Know whether you expect cell types of low complexity or higher mitochondrial content AND whether the cells are differentiating_
+ - _If you have **more than one condition**, it's often helpful to perform integration to align the cells_
+ - _**Regress out** number of UMIs (by default with sctransform), mitochondrial content, and cell cycle, if needed and appropriate for experiment, so not to drive clustering_
+ - _Identify any junk clusters for removal or re-visit QC filtering. Possible junk clusters could include those with high **mitochondrial content** and low UMIs/genes. If comprised of a lot of cells, then may be helpful to go back to QC to filter out, then re-integrate/cluster._
+ - _If **not detecting all cell types as separate clusters**, try changing the resolution or the number of PCs used for clustering_
+ 
+***
+
+## Clustering cells based on top PCs (metagenes)
+
+### Set up
+
+Before starting with this lesson, let's create a new script for the next few steps in the workflow called `clustering.R`. 
+
+Next, let's load all the libraries that we need.
+
+```{}
+# Single-cell RNA-seq - clustering
+
+# Load libraries
+library(Seurat)
+library(tidyverse)
+library(RCurl)
+library(cowplot)
+```
+
+### Identify significant PCs
+
+To overcome the extensive technical noise in the expression of any single gene for scRNA-seq data, **Seurat assigns cells to clusters based on their PCA scores derived from the expression of the integrated most variable genes**, with each PC essentially representing a "metagene" that combines information across a correlated gene set. **Determining how many PCs to include in the clustering step is therefore important to ensure that we are capturing the majority of the variation**, or cell types, present in our dataset. 
+
+It is useful to explore the PCs prior to deciding which PCs to include for the downstream clustering analysis.
+
+(a) One way of exploring the PCs is using a heatmap to visualize the most variant genes for select PCs with the **genes and cells ordered by PCA scores**. The idea here is to look at the PCs and determine whether the genes driving them make sense for differentiating the different cell types. 
+
+The `cells` argument specifies the number of cells with the most negative or postive PCA scores to use for the plotting. The idea is that we are looking for a PC where the heatmap starts to look more "fuzzy", i.e. where the distinctions between the groups of genes is not so distinct.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Explore heatmap of PCs
+DimHeatmap(seurat_integrated, 
+           dims = 1:9, 
+           cells = 500, 
+           balanced = TRUE)
+```
+
+
+This method can be slow and hard to visualize individual genes if we would like to explore a large number of PCs. In the same vein and to explore a large number of PCs, we could print out the top 10 (or more) positive and negative genes by PCA scores driving the PCs.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Printing out the most variable genes driving PCs
+print(x = seurat_integrated[["pca"]], 
+      dims = 1:10, 
+      nfeatures = 5)
+```
+
+
+
+
+(b) The **elbow plot** is another helpful way to determine how many PCs to use for clustering so that we are capturing majority of the variation in the data. The elbow plot visualizes the standard deviation of each PC, and we are looking for where the standard deviations begins to plateau. Essentially, **where the elbow appears is usually the threshold for identifying the majority of the variation**. However, this method can be quite subjective. 
+
+Let's draw an elbow plot using the top 40 PCs:
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Plot the elbow plot
+ElbowPlot(object = seurat_integrated, 
+          ndims = 40)
+```
+
+
+
+Based on this plot, we could roughly determine the majority of the variation by where the elbow occurs around PC8 - PC10, or one could argue that it should be when the data points start to get close to the X-axis, PC30 or so. This gives us a very rough idea of the number of PCs needed to be included, we can extract the information visualized here in a [**more quantitative manner**](elbow_plot_metric.md), which may be a bit more reliable.  
+
+While the above 2 methods were used a lot more with older methods from Seurat for normalization and identification of variable genes, they are no longer as important as they used to be. This is because the **SCTransform method is more accurate than older methods**.
+
+**Why is selection of PCs more important for older methods?**
+
+The older methods incorporated some technical sources of variation into some of the higher PCs, so selection of PCs was more important. SCTransform estimates the variance better and does not frequently include these sources of technical variation in the higher PCs. 
+
+In theory, with SCTransform, the more PCs we choose the more variation is accounted for when performing the clustering, but it takes a lot longer to perform the clustering. Therefore for this analysis, we will use the **first 40 PCs** to generate the clusters. 
+
+### Cluster the cells
+
+Seurat uses a graph-based clustering approach, which embeds cells in a graph structure, using a K-nearest neighbor (KNN) graph (by default), with edges drawn between cells with similar gene expression patterns. Then, it attempts to partition this graph into highly interconnected  [[Seurat - Guided Clustering Tutorial](https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html)].
+
+We will use the `FindClusters()` function to perform the graph-based clustering. The `resolution` is an important argument that sets the "granularity" of the downstream clustering and will need to be optimized for every individual experiment.  For datasets of 3,000 - 5,000 cells, the `resolution` set between `0.4`-`1.4` generally yields good clustering. Increased resolution values lead to a greater number of clusters, which is often required for larger datasets. 
+
+The `FindClusters()` function allows us to enter a series of resolutions and will calculate the "granularity" of the clustering. This is very helpful for testing which resolution works for moving forward without having to run the function for each resolution.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Determine the K-nearest neighbor graph
+seurat_integrated <- FindNeighbors(object = seurat_integrated, 
+                                dims = 1:40)
+                                
+# Determine the clusters for various resolutions                                
+seurat_integrated <- FindClusters(object = seurat_integrated,
+                               resolution = c(0.4, 0.6, 0.8, 1.0, 1.4))
+```
+
+If we look at the metadata of our Seurat object(`seurat_integrated@meta.data`), there is a separate column for each of the different resolutions calculated.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Explore resolutions
+seurat_integrated@meta.data %>% 
+        View()
+```
+
+To choose a resolution to start with, we often pick something in the middle of the range like 0.6 or 0.8. We will start with a resolution of 0.8 by assigning the identity of the clusters using the `Idents()` function.
+
+```{r, echo=T,eval=T,message=T,warning=TRUE,error=TRUE}
+# Assign identity of clusters
+Idents(object = seurat_integrated) <- "integrated_snn_res.0.8"
+```
+
+To visualize the cell clusters, there are a few different dimensionality reduction techniques that can be helpful. The most popular methods include [t-distributed stochastic neighbor embedding (t-SNE)](https://kb.10xgenomics.com/hc/en-us/articles/217265066-What-is-t-Distributed-Stochastic-Neighbor-Embedding-t-SNE-) and [Uniform Manifold Approximation and Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/index.html) techniques. 
+
+Both methods aim to place cells with similar local neighborhoods in high-dimensional space together in low-dimensional space. These methods will require you to input number of PCA dimentions to use for the visualization, we suggest using the same number of PCs as input to the clustering analysis. Here, we will proceed with the [UMAP method](https://umap-learn.readthedocs.io/en/latest/how_umap_works.html) for visualizing the clusters.
+
+```{}
+## Calculation of UMAP
+## DO NOT RUN (calculated in the last lesson)
+
+# seurat_integrated <- RunUMAP(seurat_integrated, 
+#                  reduction = "pca", 
+#                  dims = 1:40)
+```
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Plot the UMAP
+DimPlot(seurat_integrated,
+        reduction = "umap",
+        label = TRUE,
+        label.size = 6)
+```
+
+
+
+
+It can be useful to **explore other resolutions as well**. It will give you a quick idea about how the clusters would change based on the resolution parameter. For example, let's switch to a resolution of 0.4:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Assign identity of clusters
+Idents(object = seurat_integrated) <- "integrated_snn_res.0.4"
+
+# Plot the UMAP
+DimPlot(seurat_integrated,
+        reduction = "umap",
+        label = TRUE,
+        label.size = 6)
+```
+
+![](./img/SC_umap0.4.png)
+
+
+
+**How does your UMAP plot compare to the one above?**
+
+It is possible that there is some variability in the way your clusters look compared to the image in this lesson. In particular **you may see a difference in the labeling of clusters**. This is an unfortunate consequence of slight variations in the versions of packages (mostly Seurat dependencies).
+
+**If your clusters look identical to what's in the lesson, please go ahead to the next section without any downloads.**
+
+***
+
+**If your clusters do look different from what we have in the lesson**, please right-click and download [this Rdata file](https://www.dropbox.com/s/sz2xpg43xnbv7qx/seurat_integrated.RData.bz?dl=1) to the `data` folder. It contains the seurat_integrated object that we have created for the class. 
+
+Once that large file has downloaded, you will need to:
+
+1. Unzip the file by double-clicking
+2. **Load in the object to your R session and overwrite the existing one**: 
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+load("data/seurat_integrated.RData")
+```
+
+***
+
+**Exercise**
+
+After loading `seurat_integrated.RData`, set the resolution to 0.4, and plot the UMAP. How many clusters are present in our data?
+
+***
+
+We will now continue with the 0.8 resolution to check the quality control metrics and known markers for the anticipated cell types. Plot the UMAP again to make sure your image now (or still) matches what you see in the lesson:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Assign identity of clusters
+Idents(object = seurat_integrated) <- "integrated_snn_res.0.8"
+
+# Plot the UMAP
+DimPlot(seurat_integrated,
+        reduction = "umap",
+        label = TRUE,
+        label.size = 6)
+```
+
+
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Clustering analysis
+
+## Learning Objectives
+
+* Evaluate whether clustering artifacts are present 
+* Determine the quality of clustering with PCA and UMAP plots and understand when to re-cluster
+* Assess known cell type markers to hypothesize cell type identities of clusters
+
+
+Now that we have performed the integration, we want to know the different cell types present within our population of cells. 
+![](./img/sc_workflow_integration.png)
+
+***
+
+_**Goals:**_ 
+ 
+ - _To **determine whether clusters represent true cell types or cluster due to biological or technical variation**, such as clusters of cells in the S phase of the cell cycle, clusters of specific batches, or cells with high mitochondrial content._
+ - _To use known cell type marker genes to **determine the identities of the clusters**._
+
+_**Challenges:**_
+ - _**Identifying the cell types** of each cluster_
+ - _Maintaining patience as this can be a highly iterative process between clustering and marker identification (sometimes even going back to the QC filtering or normalization)_
+
+_**Recommendations:**_
+ 
+ - _Have a good idea of your expectations for the **cell types to be present** and a handful of marker genes for these cell types. Know whether you expect cell types of low complexity or higher mitochondrial content AND whether the cells are differentiating_
+ - _Identify any junk clusters for removal. Possible junk clusters could include those with high **mitochondrial content** and low UMIs/genes_
+ - _If **not detecting all cell types as separate clusters**, try changing the UMAP resolution first, and if this doesn't work, then can alter the number of PCs used for clustering, the number of variable genes used, or subset the dataset to clusters of interest and re-cluster_
+
+***
+
+## Exploration of quality control metrics
+
+To determine whether our clusters might be due to artifacts such as cell cycle phase or mitochondrial expression, it can be useful to explore these metrics visually to see if any clusters exhibit enrichment or are different from the other clusters. However, if enrichment or differences are observed for particular clusters it may not be worrisome if it can be explained by the cell type. 
+
+To explore and visualize the various quality metrics, we will use the versatile `DimPlot()` and `FeaturePlot()` functions from Seurat. 
+
+### Segregation of clusters by sample
+
+We can start by exploring the distribution of cells per cluster in each sample:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Extract identity and sample information from seurat object to determine the number of cells per cluster per sample
+n_cells <- FetchData(seurat_integrated, 
+                     vars = c("ident", "orig.ident")) %>%
+        dplyr::count(ident, orig.ident) %>%
+        tidyr::spread(ident, n)
+
+# View table
+View(n_cells)
+```
+
+
+
+We can visualize the cells per cluster for each sample using the UMAP:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# UMAP of cells in each cluster by sample
+DimPlot(seurat_integrated, 
+        label = TRUE, 
+        split.by = "sample")  + NoLegend()
+```
+
+
+Generally, we expect to see the majority of the cell type clusters to be present in all conditions; however, depending on the experiment we might expect to see some condition-specific cell types present. These clusters look pretty similar between conditions, which is good since we expected similar cell types to be present in both control and stimulated conditions.
+
+### Segregation of clusters by cell cycle phase
+
+Next, we can explore whether the **cells cluster by the different cell cycle phases**. We did not regress out variation due to cell cycle phase when we performed the SCTransform normalization and regression of uninteresting sources of variation. If our cell clusters showed large differences in cell cycle expression, this would be an indication we would want to re-run the SCTransform and add the `S.Score` and `G2M.Score` to our variables to regress, then re-run the rest of the steps.
+
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Explore whether clusters segregate by cell cycle phase
+DimPlot(seurat_integrated,
+        label = TRUE, 
+        split.by = "Phase")  + NoLegend()
+```
+
+
+
+
+We do not see much clustering by cell cycle score, so we can proceed with the QC.
+
+### Segregation of clusters by various sources of uninteresting variation
+
+Next we will explore additional metrics, such as the number of UMIs and genes per cell, S-phase and G2M-phase markers, and mitochondrial gene expression by UMAP. Looking at the individual S and G2M scores can give us additional information to checking the phase as we did previously.
+
+```{r, fig.width=10,fig.height=12,echo=T,eval=T,message=F,warning=F,error=T} 
+# Determine metrics to plot present in seurat_integrated@meta.data
+metrics <-  c("nUMI", "nGene", "S.Score", "G2M.Score", "mitoRatio")
+
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = metrics,
+            pt.size = 0.7, 
+            order = TRUE,
+            min.cutoff = 'q10',
+            label = TRUE)
+```
+
+
+
+
+> _**NOTE:** The `order` argument will plot the positive cells above the negative cells, while the `min.cutoff` argument will determine the threshold for shading. A `min.cutoff` of `q10` translates to the 10% of cells with the lowest expression of the gene will not exhibit any purple shading (completely gray)._
+
+The metrics seem to be relatively even across the clusters, with the exception of the `nUMIs` and `nGene` exhibiting higher values in clusters 3, 9, 14, and 15, and, perhaps, cluster 17. We will keep an eye on these clusters to see whether the cell types may explain the increase. 
+
+If we see differences corresponding to any of these metrics at this point in time, then we will often note them and then decide after identifying the cell type identities whether to take any further action.
+
+### Exploration of the PCs driving the different clusters
+
+We can also explore how well our clusters separate by the different PCs; we hope that the defined PCs separate the cell types well. To visualize this information, we need to extract the UMAP coordinate information for the cells along with their corresponding scores for each of the PCs to view by UMAP. 
+
+First, we identify the information we would like to extract from the Seurat object, then, we can use the `FetchData()` function to extract it.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Defining the information in the seurat object of interest
+columns <- c(paste0("PC_", 1:16),
+            "ident",
+            "UMAP_1", "UMAP_2")
+
+# Extracting this data from the seurat object
+pc_data <- FetchData(seurat_integrated, 
+                     vars = columns)
+```
+
+> **NOTE:** How did we know in the `FetchData()` function to include `UMAP_1` to obtain the UMAP coordinates? The [Seurat cheatsheet](https://satijalab.org/seurat/essential_commands.html) describes the function as being able to pull any data from the expression matrices, cell embeddings, or metadata. 
+> 
+> For instance, if you explore the `seurat_integrated@reductions` list object, the first component is for PCA, and includes a slot for `cell.embeddings`. We can use the column names (`PC_1`, `PC_2`, `PC_3`, etc.) to pull out the coordinates or PC scores corresponding to each cell for each of the PCs. 
+> 
+> We could do the same thing for UMAP:
+> 
+> ```{}
+> # Extract the UMAP coordinates for the first 10 cells
+> seurat_integrated@reductions$umap@cell.embeddings[1:10, 1:2]
+>```
+>
+> The `FetchData()` function just allows us to extract the data more easily.
+
+In the UMAP plots below, the cells are colored by their PC score for each respective principal component. 
+
+Let's take a quick look at the top 16 PCs:
+
+```{r, fig.width=13,fig.height=15,echo=T,eval=T,message=F,warning=F,error=T} 
+# Adding cluster label to center of cluster on UMAP
+umap_label <- FetchData(seurat_integrated, 
+                        vars = c("ident", "UMAP_1", "UMAP_2"))  %>%
+  group_by(ident) %>%
+  summarise(x=mean(UMAP_1), y=mean(UMAP_2))
+  
+# Plotting a UMAP plot for each of the PCs
+map(paste0("PC_", 1:16), function(pc){
+        ggplot(pc_data, 
+               aes(UMAP_1, UMAP_2)) +
+                geom_point(aes_string(color=pc), 
+                           alpha = 0.7) +
+                scale_color_gradient(guide = FALSE, 
+                                     low = "grey90", 
+                                     high = "blue")  +
+                geom_text(data=umap_label, 
+                          aes(label=ident, x, y)) +
+                ggtitle(pc)
+}) %>% 
+        plot_grid(plotlist = .)
+```
+
+
+
+
+We can see how the clusters are represented by the different PCs. For instance, the genes driving `PC_2` exhibit higher expression in clusters 6, 11, and 17 (maybe a bit higher in 15, too). We could look back at our genes driving this PC to get an idea of what the cell types might be:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Examine PCA results 
+print(seurat_integrated[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+With the CD79A and CD74 genes and the HLA genes as positive markers of `PC_2`, we can hypothesize that clusters 6, 11, and 17 correspond to B cells. This just hints at what the clusters identity could be, with the identities of the clusters being determined through a combination of the PCs. 
+
+To truly determine the identity of the clusters and whether the `resolution` is appropriate, it is helpful to explore a handful of known gene markers for the cell types expected. 
+
+## Exploring known cell type markers
+
+With the cells clustered, we can explore the cell type identities by looking for known markers. The UMAP plot with clusters marked is shown, followed by the different cell types expected.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+DimPlot(object = seurat_integrated, 
+        reduction = "umap", 
+        label = TRUE) + NoLegend()
+```
+
+
+| Cell Type | Marker |
+|:---:|:---:|
+| CD14+ monocytes | CD14, LYZ | 
+| FCGR3A+ monocytes | FCGR3A, MS4A7 |
+| Conventional dendritic cells | FCER1A, CST3 |
+| Plasmacytoid dendritic cells | IL3RA, GZMB, SERPINF1, ITM2C |
+| B cells | CD79A, MS4A1 |
+| T cells | CD3D |
+| CD4+ T cells | CD3D, IL7R, CCR7 |
+| CD8+ T cells| CD3D, CD8A |
+| NK cells | GNLY, NKG7 |
+| Megakaryocytes | PPBP |
+| Erythrocytes | HBB, HBA2 |
+
+The `FeaturePlot()` function from seurat makes it easy to visualize a handful of genes using the gene IDs stored in the Seurat object. We can easily explore the expression of known gene markers on top of our UMAP visualizations. Let's go through and determine the identities of the clusters. To access the normalized expression levels of all genes, we can use the normalized count data stored in the `RNA` assay slot. 
+
+>_**NOTE:** The SCTransform normalization was performed only on the 3000 most variable genes, so many of our genes of interest may not be present in this data._
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Select the RNA counts slot to be the default assay
+DefaultAssay(seurat_integrated) <- "RNA"
+
+# Normalize RNA data for visualization purposes
+seurat_integrated <- NormalizeData(seurat_integrated, verbose = FALSE)
+```
+
+>_**NOTE:** Assay is a slot defined in the Seurat object, it has multiple slots within it. In a given assay, the `counts` slot stores non-normalized raw counts, and the `data` slot stores normalized expression data. Therefore, when we run the `NormalizeData()` function in the above code, the normalized data will be stored in the `data` slot of the RNA assay while the `counts` slot will remain unaltered._
+
+Depending on our markers of interest, they could be positive or negative markers for a particular cell type. The combined expression of our chosen handful of markers should give us an idea on whether a cluster corresponds to that particular cell type. 
+
+For the markers used here, we are looking for positive markers and consistency of expression of the markers across the clusters. For example, if there are two markers for a cell type and only one of them is expressed in a cluster - then we cannot reliably assign that cluster to the cell type.
+
+
+**CD14+ monocyte markers**
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("CD14", "LYZ"), 
+            order = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+```
+
+
+CD14+ monocytes appear to correspond to clusters 1, 3, and 14. We wouldn't include clusters 9 and 15 because they do not highly express both of these markers.
+
+**FCGR3A+ monocyte markers**
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("FCGR3A", "MS4A7"), 
+            order = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+```
+
+
+FCGR3A+ monocytes markers distinctly highlight cluster 9, although we do see some decent expression in clusters 1, 3, and 14. We would like to see additional markers for FCGR3A+ cells show up when we perform the marker identification.
+
+**Macrophages**
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("MARCO", "ITGAM", "ADGRE1"), 
+            order = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+```
+
+
+
+
+
+We don't see much overlap of our markers, so no clusters appear to correspond to macrophages; perhaps cell culture conditions negatively selected for macrophages (more highly adherent).
+
+**Conventional dendritic cell markers**
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("FCER1A", "CST3"), 
+            order = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+```
+
+
+
+
+
+The markers corresponding to conventional dendritic cells identify cluster 15 (both markers consistently show expression).
+
+**Plasmacytoid dendritic cell markers**
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("IL3RA", "GZMB", "SERPINF1", "ITM2C"), 
+            order = TRUE,
+            min.cutoff = 'q10', 
+            label = TRUE)
+```
+
+
+
+
+Plasmacytoid dendritic cells represent cluster 19. While there are a lot of differences in the expression of these markers, we see cluster 19 is consistently strongly expressed.
+
+***
+**Exercise**
+
+Hypothesize the clusters corresponding to each of the different clusters in the table:
+
+| Cell Type | Clusters |
+|:---:|:---:|
+| CD14+ monocytes | 1, 3, 14 | 
+| FCGR3A+ monocytes | 9 |
+| Conventional dendritic cells | 15 |
+| Plasmacytoid dendritic cells | 19 |
+| Marcrophages | - |
+| B cells | ? |
+| T cells | ? |
+| CD4+ T cells | ? |
+| CD8+ T cells| ? |
+| NK cells | ? |
+| Megakaryocytes | ? |
+| Erythrocytes | ? |
+| Unknown | ? |
+
+***
+
+> **NOTE:** If any cluster appears to contain two separate cell types, it's helpful to increase our clustering resolution to properly subset the clusters. Alternatively, if we still can't separate out the clusters using increased resolution, then it's possible that we had used too few principal components such that we are just not separating out these cell types of interest. To inform our choice of PCs, we could look at our PC gene expression overlapping the UMAP plots and determine whether our cell populations are separating by the PCs included.
+
+Now we have a decent idea as to the cell types corresponding to the majority of the clusters, but some questions remain:
+
+1. *What are the cell type identities of clusters 7 and 20?*
+2. *Do the clusters corresponding to the same cell types have biologically meaningful differences? Are there subpopulations of these cell types?*
+3. *Can we acquire higher confidence in these cell type identities by identifying other marker genes for these clusters?*
+
+Marker identification analysis can help us address all of these questions!! 
+
+The next step will be to perform marker identification analysis, which will output the genes that significantly differ in expression between clusters. Using these genes we can determine or improve confidence in the identities of the clusters/subclusters.
+
+***
+
+
+
+
+
+
+
+
+
+
+# Marker identification
+
+## Learning Objectives
+
+* Understand how to determine markers of individual clusters
+* Understand the iterative processes of clustering and marker identification
+
+
+
+Now that we have identified our desired clusters, we can move on to marker identification, which will allow us to verify the identity of certain clusters and help surmise the identity of any unknown clusters. 
+![](./img/sc_workflow_integration.png)
+
+
+***
+
+_**Goals:**_ 
+ 
+ - _To **determine the gene markers** for each of the clusters_
+ - _To **identify cell types** of each cluster using markers_
+ - _To determine whether there's a need to **re-cluster based on cell type markers**, perhaps clusters need to be merged or split_
+
+_**Challenges:**_
+ 
+ - _Over-interpretation of the results_
+ - _Combining different types of marker identification_
+
+_**Recommendations:**_
+ 
+ - _Think of the results as hypotheses that need verification. Inflated p-values can lead to over-interpretation of results (essentially each cell is used as a replicate). Top markers are most trustworthy._
+ _Identify all markers conserved between conditions for each cluster_
+ - _Identify markers that are differentially expressed between specific clusters_
+
+***
+
+Our clustering analysis resulted in the following clusters:
+
+
+![](./img/SC_umap.png)
+
+
+**Remember that we had the following questions from the clustering analysis**: 
+
+1. *What are the cell type identities of clusters 7 and 20?*
+2. *Do the clusters corresponding to the same cell types have biologically meaningful differences? Are there subpopulations of these cell types?*
+3. *Can we acquire higher confidence in these cell type identities by identifying other marker genes for these clusters?*
+
+There are a few different types of marker identification that we can explore using Seurat to get to the answer of these questions. Each with their own benefits and drawbacks:
+
+1. **Identification of all markers for each cluster:** this analysis compares each cluster against all others and outputs the genes that are differentially expressed/present. 
+	- *Useful for identifying unknown clusters and improving confidence in hypothesized cell types.*
+
+2. **Identification of conserved markers for each cluster:** This analysis looks for genes that are differentially expressed/present within each condition first, and then reports those genes that are conserved in the cluster across all conditions. These genes can help to figure out the identity for the cluster. 
+	- *Useful with more than one condition to identify cell type markers that are conserved across conditions.*  	
+ 
+3. **Marker identification between specific clusters:** this analysis explores differentially expressed genes between specific clusters. 
+	- *Useful for determining differences in gene expression between clusters that appear to be representing the same celltype (i.e with markers that are similar) from the above analyses.*
+
+## Identification of all markers for each cluster
+
+This type of analysis is typically **recommended for when evaluating a single sample group/condition**. With the ` FindAllMarkers()` function we are comparing each cluster against all other clusters to identify potential marker genes. The cells in each cluster are treated as replicates, and essentially a **differential expression analysis is performed** with some statistical test. 
+
+> **NOTE:** The default is a Wilcoxon Rank Sum test, but there are other options available. 
+
+
+![](./img/marker_ident_function1.png)
+
+
+
+The `FindAllMarkers()` function has **three important arguments** which provide thresholds for determining whether a gene is a marker:
+
+- `logfc.threshold`: minimum log2 fold change for average expression of gene in cluster relative to the average expression in all other clusters combined. Default is 0.25.
+	- **Cons:** 
+		- could miss those cell markers that are expressed in a small fraction of cells within the cluster of interest, but not in the other clusters, if the average logfc doesn't meet the threshold
+		- could return a lot of metabolic/ribosomal genes due to slight differences in metabolic output by different cell types, which are not as useful to distinguish cell type identities
+- `min.diff.pct`: minimum percent difference between the percent of cells expressing the gene in the cluster and the percent of cells expressing gene in all other clusters combined.
+	- **Cons:** could miss those cell markers that are expressed in all cells, but are highly up-regulated in this specific cell type
+- `min.pct`: only test genes that are detected in a minimum fraction of cells in either of the two populations. Meant to speed up the function by not testing genes that are very infrequently expressed. Default is 0.1.
+	- **Cons:** if set to a very high value could incur many false negatives due to the fact that not all genes are detected in all cells (even if it is expressed) 
+	
+You could use any combination of these arguments depending on how stringent/lenient you want to be. Also, by default this function will return to you genes that exhibit both positive and negative expression changes. Typically, we add an argument `only.pos` to opt for keeping only the positive changes. The code to find markers for each cluster is shown below. **We will not run this code.**
+
+```{}
+## DO NOT RUN THIS CODE ##
+
+# Find markers for every cluster compared to all remaining cells, report only the positive ones
+markers <- FindAllMarkers(object = seurat_integrated, 
+                          only.pos = TRUE,
+                          logfc.threshold = 0.25)                     
+```
+
+> _**NOTE:** This command can quite take long to run, as it is processing each individual cluster against all other cells._
+
+## Identification of conserved markers in all conditions
+
+Since we have samples representing different conditions in our dataset, **our best option is to find conserved markers**. This function internally separates out cells by sample group/condition, and then performs differential gene expression testing for a single specified cluster against all other clusters (or a second cluster, if specified). Gene-level p-values are computed for each condition and then combined across groups using meta-analysis methods from the MetaDE R package.
+
+
+![](./img/marker_ident_function2.png)
+
+Before we start our marker identification we will explicitly set our default assay, we want to use the **normalized data, but not the integrated data**.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+DefaultAssay(seurat_integrated) <- "RNA"
+```
+
+> _**NOTE:** The default assay should have already been `RNA`, because we set it up in the previous clustering quality control lesson. But we encourage you to run this line of code above to be absolutely sure in case the active slot was changed somewhere upstream in your analysis. Note that the raw and normalized counts are stored in the `counts` and `data` slots of `RNA` assay. By default, the functions for finding markers will use normalized data._
+
+The function `FindConservedMarkers()`, has the following structure:
+
+**`FindConservedMarkers()` syntax:**
+
+```{}
+## DO NOT RUN ##
+
+FindConservedMarkers(seurat_integrated,
+                     ident.1 = cluster,
+                     grouping.var = "sample",
+                     only.pos = TRUE,
+		     min.diff.pct = 0.25,
+                     min.pct = 0.25,
+		     logfc.threshold = 0.25)
+```
+
+You will recognize some of the arguments we described previously for the `FindAllMarkers()` function; this is because internally it is using that function to first find markers within each group. Here, we list **some additional arguments** which provide for when using `FindConservedMarkers()`:
+
+- `ident.1`: this function only evaluates one cluster at a time; here you would specify the cluster of interest.
+- `grouping.var`: the variable (column header) in your metadata which specifies the separation of cells into groups
+
+For our analysis we will be fairly lenient and **use only the log fold change threshold greater than 0.25**. We will also specify to return only the positive markers for each cluster.
+
+
+Let's **test it out on one cluster** to see how it works:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+cluster0_conserved_markers <- FindConservedMarkers(seurat_integrated,
+                              ident.1 = 0,
+                     	      grouping.var = "sample",
+                              only.pos = TRUE,
+		              logfc.threshold = 0.25)
+```
+
+
+
+**The output from the `FindConservedMarkers()` function**, is a matrix containing a ranked list of putative markers listed by gene ID for the cluster we specified, and associated statistics. Note that the same set of statistics are computed for each group (in our case, Ctrl and Stim) and the last two columns correspond to the combined p-value across the two groups. We describe some of these columns below:
+
+- **gene:** gene symbol
+- **condition_p_val:** p-value not adjusted for multiple test correction for condition
+- **condition_avg_logFC:** average log fold change for condition. Positive values indicate that the gene is more highly expressed in the cluster.	
+- **condition_pct.1:** percentage of cells where the gene is detected in the cluster for condition		
+- **condition_pct.2:** percentage of cells where the gene is detected on average in the other clusters for condition
+- **condition_p_val_adj:** adjusted p-value for condition, based on bonferroni correction using all genes in the dataset, used to determine significance
+- **max_pval:**	largest p value of p value calculated by each group/condition
+- **minimump_p_val:** combined p value
+
+>**NOTE:** Since each cell is being treated as a replicate this will result in inflated p-values within each group! A gene may have an incredibly low p-value < 1e-50 but that doesn't translate as a highly reliable marker gene. 
+
+When looking at the output, **we suggest looking for markers with large differences in expression between `pct.1` and `pct.2` and larger fold changes**. For instance if `pct.1` = 0.90 and `pct.2` = 0.80, it may not be as exciting of a marker. However, if `pct.2` = 0.1 instead, the bigger difference would be more convincing. Also, of interest is if the majority of cells expressing the marker is in my cluster of interest. If `pct.1` is low, such as 0.3, it may not be as interesting. Both of these are also possible parameters to include when running the function, as described above.
+
+
+### Adding Gene Annotations
+
+It can be helpful to add columns with gene annotation information. In order to do that we will have you [download this file](https://github.com/hbctraining/scRNA-seq/raw/master/data/annotation.csv) to your `data` folder by right clicking and "Save as..". Then load it in to your R environment:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+annotations <- read.csv("data/annotation.csv")
+```
+>_**NOTE:** If you are interested in knowing how we obtained this annotation file, take a look at [the linked materials](fetching_annotations.md)._
+
+First, we will turn the row names with gene identifiers into its own columns. Then we will merge this annotation file with our results from the `FindConservedMarkers()`:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+
+# Combine markers with gene descriptions 
+cluster0_ann_markers <- cluster0_conserved_markers %>% 
+                rownames_to_column(var="gene") %>% 
+                left_join(y = unique(annotations[, c("gene_name", "description")]),
+                          by = c("gene" = "gene_name"))
+
+View(cluster0_ann_markers)
+```
+
+***
+
+**Exercise**
+
+In the previous lesson, we identified cluster 9 as FCGR3A+ monocytes by inspecting the expression of known cell markers FCGR3A and MS4A7. Use `FindConservedMarkers()` function to find conserved markers for cluster 9. What do you observe? Do you see FCGR3A and MS4A7 as highly expressed genes in cluster 9?
+
+***
+
+### Running on multiple samples
+
+The function `FindConservedMarkers()` **accepts a single cluster at a time**, and we could run this function as many times as we have clusters. However, this is not very efficient. Instead we will first create a function to find the conserved markers including all the parameters we want to include. We will also **add a few lines of code to modify the output**. Our function will:
+
+1. Run the `FindConservedMarkers()` function
+2. Transfer row names to a column using `rownames_to_column()` function
+3. Merge in annotations
+3. Create the column of cluster IDs using the `cbind()` function
+
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Create function to get conserved markers for any given cluster
+get_conserved <- function(cluster){
+  FindConservedMarkers(seurat_integrated,
+                       ident.1 = cluster,
+                       grouping.var = "sample",
+                       only.pos = TRUE) %>%
+    rownames_to_column(var = "gene") %>%
+    left_join(y = unique(annotations[, c("gene_name", "description")]),
+               by = c("gene" = "gene_name")) %>%
+    cbind(cluster_id = cluster, .)
+  }
+
+```
+
+Now that we have this function created  we can use it as an argument to the appropriate `map` function. We want the output of the `map` family of functions to be a **dataframe with each cluster output bound together by rows**, we will use the `map_dfr()` function.
+
+**`map` family syntax:**
+
+```{}
+## DO NOT RUN ##
+map_dfr(inputs_to_function, name_of_function)
+```
+
+Now, let's try this function to find the conserved markers for the clusters that were unidentified celltypes: cluster7 and cluster 20. 
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Iterate function across desired clusters
+conserved_markers <- map_dfr(c(7,20), get_conserved)
+```
+
+> #### Finding markers for all clusters
+> For your data, you may want to run this function on all clusters, in which case you could input `0:20` instead of `c(7,20)`; however, it would take quite a while to run. Also, it is possible that when you run this function on all clusters, in **some cases you will have clusters that do not have enough cells for a particular group** - and  your function will fail. For these clusters you will need to use `FindAllMarkers()`.
+
+### Evaluating marker genes
+
+We would like to use these gene lists to see of we can **identify which celltypes these clusters identify with.** Let's take a look at the top genes for each of the clusters and see if that gives us any hints. We can view the top 10 markers by average fold change across the two groups, for each cluster for a quick perusal:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+
+# Extract top 10 markers per cluster
+top10 <- conserved_markers %>% 
+  mutate(avg_fc = (ctrl_avg_log2FC + stim_avg_log2FC) /2) %>% 
+  group_by(cluster_id) %>% 
+  top_n(n = 10, 
+        wt = avg_fc)
+
+# Visualize top 10 markers per cluster
+View(top10)
+```
+
+
+
+
+
+We see a lot of heat shock and DNA damage genes appear for **cluster 7**. Based on these markers, it is likely that these are **stressed or dying cells**. However, if we explore the quality metrics for these cells in more detail (i.e. mitoRatio and nUMI overlayed on the cluster) we don't really see data that support that argument. If we look a but closer at the marker gene list **we also a few T cell-associated genes and markers of activation**. It is possible that these could be activated (cytotoxic) T cells. There is a breadth of research supporting the association of heat shock proteins with reactive T cells in the induction of antiâinflammatory cytokines in chronic inflammation. This is a cluster in which we we would need a deeper understanding of immune cells to really tease apart the results and make a final conclusion.
+
+For **cluster 20**, the enriched genes don't appear to have a common theme that stands out to us. We often look at the genes with larger differences in `pct.1` vs. `pct.2` for good marker genes. For instance, we might be **interested in the gene TPSB2**, which shows a large proportion of cells in the cluster expressing this gene, but very few of the cells in the other clusters expressing it. If we 'Google' TPSB2 we find the [GeneCards website](https://www.genecards.org/cgi-bin/carddisp.pl?gene=TPSB2&keywords=TPSB2).
+
+> "Beta tryptases appear to be the main isoenzymes expressed in mast cells, whereas in basophils, alpha-tryptases predominate. Tryptases have been implicated as mediators in the pathogenesis of asthma and other allergic and inflammatory disorders."
+
+It is therefore possible that cluster 20 represents **mast cells**. Mast cells are important cells of the immune system and are of the hematopoietic lineage. [Studies](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5045264/) have identified the mast cell signature to be **significantly enriched in serine proteases** such as **TPSAB1 and TPSB2**, both of which show up in our conserved markers list. Another gene which is not a serine protease, but is a **known mast-cell specific gene and shows up in our list is FCER1A** (encoding a subunit of the IgE receptor). Additionally, we see GATA1 and GATA2  appear in our lists which are not mast cell marker genes but are abundantly expressed in mast cells and are known transcrtiption factors which [regulate various mast-cell specific genes](https://mcb.asm.org/content/34/10/1812).
+
+
+### Visualizing marker genes
+
+To get a better idea of cell type identity for **cluster 20** we can **explore the expression of different identified markers** by cluster using the `FeaturePlot()` function. 
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Plot interesting marker gene expression for cluster 20
+FeaturePlot(object = seurat_integrated, 
+                        features = c("TPSAB1", "TPSB2", "FCER1A", "GATA1", "GATA2"),
+                         order = TRUE,
+                         min.cutoff = 'q10', 
+                         label = TRUE,
+			 repel = TRUE)
+```
+
+
+
+We can also explore the range in expression of specific markers by using **violin plots**:
+
+> **Violin plots** are similar to box plots, except that they also show the probability density of the data at different values, usually smoothed by a kernel density estimator. A violin plot is more informative than a plain box plot. While a box plot only shows summary statistics such as mean/median and interquartile ranges, the violin plot shows the full distribution of the data. The difference is particularly useful when the data distribution is multimodal (more than one peak). In this case a violin plot shows the presence of different peaks, their position and relative amplitude.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Vln plot - cluster 20
+VlnPlot(object = seurat_integrated, 
+        features = c("TPSAB1", "TPSB2", "FCER1A", "GATA1", "GATA2"))
+```        
+
+
+
+
+These results and plots can help us determine the identity of these clusters or verify what we hypothesize the identity to be after exploring the canonical markers of expected cell types previously.
+
+
+## Identifying gene markers for each cluster
+
+The last set of questions we had regarding the analysis involved whether the clusters corresponding to the same cell types have biologically meaningful differences. Sometimes the list of markers returned don't sufficiently separate some of the clusters. For instance, we had previously identified clusters 0, 2, 4, 10, and 18 as CD4+ Tcells, but **are there biologically relevant differences between these clusters of cells?** We can use the `FindMarkers()` function to determine the genes that are differentially expressed between two specific clusters. 
+
+
+![](./img/marker_ident_function3.png)
+
+
+We can try all combinations of comparisons, but we'll start with cluster 2 versus all other CD4+ T cell clusters:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+
+# Determine differentiating markers for CD4+ T cell
+cd4_tcells <- FindMarkers(seurat_integrated,
+                          ident.1 = 2,
+                          ident.2 = c(0,4,10,18))                  
+
+# Add gene symbols to the DE table
+cd4_tcells <- cd4_tcells %>%
+  rownames_to_column(var = "gene") %>%
+  left_join(y = unique(annotations[, c("gene_name", "description")]),
+             by = c("gene" = "gene_name"))
+
+# Reorder columns and sort by padj      
+cd4_tcells <- cd4_tcells[, c(1, 3:5,2,6:7)]
+
+cd4_tcells <- cd4_tcells %>%
+  dplyr::arrange(p_val_adj) 
+
+# View data
+View(cd4_tcells)
+
+```
+
+
+
+
+
+
+Of these top genes the **CREM gene** stands out as a marker of activation. We know that another marker of activation is CD69, and markers of naive or memory cells include the SELL and CCR7 genes. Interestingly, the SELL gene is also at the top of the list. Let's **explore activation status a bit visually** using these new cell state markers:
+
+| Cell State | Marker |
+|:---:|:---:|
+| Naive T cells | CCR7, SELL | 
+| Activated T cells | CREM, CD69 |
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Plot gene markers of activated and naive/memory T cells
+FeaturePlot(seurat_integrated, 
+            reduction = "umap", 
+            features = c("CREM", "CD69", "CCR7", "SELL"),
+            label = TRUE, 
+            order = TRUE,
+            min.cutoff = 'q10',
+	    repel = TRUE
+            )
+```
+
+
+
+
+As markers for the naive and activated states both showed up in the marker list, it is helpful to visualize expression. Based on these plots it seems as though clusters 0 and 2 are reliably the naive T cells. However, for the activated T cells it is hard to tell. We might say that clusters 4 and 18 are activated T cells, but the CD69 expression is not as apparent as CREM. We will label the naive cells and leave the remaining clusters labeled as CD4+ T cells.
+
+Now taking all of this information, we can surmise the cell types of the different clusters and plot the cells with cell type labels.
+
+
+| Cluster ID	| Cell Type |
+|:-----:|:-----:|
+|0	| Naive or memory CD4+ T cells|
+|1	| CD14+ monocytes |
+|2	| Naive or memory CD4+ T cells|
+|3	| CD14+ monocytes|
+|4	| CD4+ T cells |
+|5	| CD8+ T cells |
+|6	| B cells |
+|7	| Stressed cells / Activated T cells |
+|8	| NK cells |
+|9	| FCGR3A+ monocytes |
+|10	| CD4+ T cells |
+|11	| B cells |
+|12	| NK cells |
+|13	| CD8+ T cells |
+|14	| CD14+ monocytes |
+|15| Conventional dendritic cells |
+|16| Megakaryocytes |
+|17| B cells |
+|18| CD4+ T cells |
+|19| Plasmacytoid dendritic cells |
+|20| Mast cells |
+
+
+We can then reassign the identity of the clusters to these cell types:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Rename all identities
+seurat_integrated <- RenameIdents(object = seurat_integrated, 
+                               "0" = "Naive or memory CD4+ T cells",
+                               "1" = "CD14+ monocytes",
+                               "2" = "Naive or memory CD4+ T cells",
+                               "3" = "CD14+ monocytes",
+                               "4" = "CD4+ T cells",
+                               "5" = "CD8+ T cells",
+                               "6" = "B cells",
+                               "7" = "Stressed cells / Activated T cells",
+                               "8" = "NK cells",
+                               "9" = "FCGR3A+ monocytes",
+                               "10" = "CD4+ T cells",
+                               "11" = "B cells",
+                               "12" = "NK cells",
+                               "13" = "CD8+ T cells",
+                               "14" = "CD14+ monocytes",
+                               "15" = "Conventional dendritic cells",
+			       "16" = "Megakaryocytes",
+			       "17" = "B cells", 
+			       "18" = "CD4+ T cells", 
+			       "19" = "Plasmacytoid dendritic cells", 
+			       "20" = "Mast cells")
+
+
+# Plot the UMAP
+DimPlot(object = seurat_integrated, 
+        reduction = "umap", 
+        label = TRUE,
+        label.size = 3,
+        repel = TRUE)
+```
+
+
+
+
+If we wanted to remove the potentially stressed cells, we could use the `subset()` function:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T} 
+# Remove the stressed or dying cells
+seurat_subset_labeled <- subset(seurat_integrated,
+                               idents = "Stressed cells / Activated T cells", invert = TRUE)
+
+# Re-visualize the clusters
+DimPlot(object = seurat_subset_labeled, 
+        reduction = "umap", 
+        label = TRUE,
+        label.size = 3,
+	repel = TRUE)
+```
+
+
+
+
+
+
+Now we would want to save our final labelled Seurat object and the output of `sessionInfo()`:
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T}     
+# Save final R object
+write_rds(seurat_integrated,
+          path = "results/seurat_labelled.rds")
+```
+
+
+***
+
+Now that we have our clusters defined and the markers for each of our clusters, we have a few different options:
+
+- Experimentally validate intriguing markers for our identified cell types.
+- Explore a subset of the cell types to discover subclusters of cells as described [here](seurat_subclustering.md)
+- Perform differential expression analysis between conditions `ctrl` and `stim`
+	- Biological replicates are **necessary** to proceed with this analysis, and we have [additional materials](pseudobulk_DESeq2_scrnaseq.md) to help walk through this analysis.
+- Trajectory analysis, or lineage tracing, could be performed if trying to determine the progression between cell types or cell states. For example, we could explore any of the following using this type of analysis:
+	- Differentiation processes
+	- Expression changes over time
+	- Cell state changes in expression
+
+***
+
+
+
+# Buliding Trajectories
+
+
+We can convert the Seurat object to a CellDataSet object using the as.cell_data_set() function from SeuratWrappers and build the trajectories using Monocle 3. We’ll do this separately for erythroid and lymphoid lineages, but you could explore other strategies building a trajectory for all lineages together.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T}   
+
+Idents(seurat_integrated) <- seurat_integrated$seurat_clusters
+
+DefaultAssay(seurat_integrated) <- "integrated"
+seurat_integrated <- ScaleData(seurat_integrated, verbose = FALSE)
+seurat_integrated <- RunPCA(seurat_integrated, npcs = 30, verbose = FALSE)
+seurat_integrated <- RunUMAP(seurat_integrated, reduction = "pca", dims = 1:30)
+seurat_integrated.cds <- as.cell_data_set(seurat_integrated)
+
+seurat_integrated.cds <- cluster_cells(cds = seurat_integrated.cds, reduction_method = "UMAP")
+seurat_integrated.cds <- learn_graph(seurat_integrated.cds, use_partition = TRUE)
+hsc <- colnames(seurat_integrated)
+root_group = WhichCells(seurat_integrated, idents="0")
+seurat_integrated.cds <- order_cells(seurat_integrated.cds, reduction_method = "UMAP", root_cells = root_group)
+rowData(seurat_integrated.cds)$gene_short_name <- rownames(rowData(seurat_integrated.cds))
+
+
+```
+To compute pseudotime estimates for each trajectory we need to decide what the start of each trajectory is. In our case, we know that the hematopoietic stem cells are the progenitors of other cell types in the trajectory, so we can set these cells as the root of the trajectory. Monocle 3 includes an interactive function to select cells as the root nodes in the graph. This function will be launched if calling order_cells() without specifying the root_cells parameter. Here we’ve pre-selected some cells as the root, and saved these to a file for reproducibility. This file can be downloaded here.
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T}   
+plot_cells(
+  cds = seurat_integrated.cds,
+  color_cells_by = "pseudotime",
+  show_trajectory_graph = F,
+  group_cells_by = 'cluster'
+)
+
+```
+
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T}
+sessionInfo()
+```
+---
+*The lesson material was originally created by Harvard Chan Bioinformatics Core, and has been developed by members of the BMBL.*

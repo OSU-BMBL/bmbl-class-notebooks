@@ -1,0 +1,9 @@
+name,treatment,time
+S1,control,day3
+S2,control,day3
+S3,control,day7
+S4,control,day7
+S5,treatment,day3
+S6,treatment,day3
+S7,treatment,day7
+S8,treatment,day7
