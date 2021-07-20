@@ -344,58 +344,8 @@ spatPlot(gobject = seqfish_mini, cell_color = 'HMRF_k9_b.28',
          point_size = 3, coord_fix_ratio = 1, cell_color_code = giotto_colors)
 ```
 
+                 edge_weight_range_enrichment = c(2,5))
 
-# cell neighborhood: cell-type/cell-type interactions
-```{r }
-set.seed(seed = 2841)
-cell_proximities = cellProximityEnrichment(gobject = seqfish_mini,
-                                           cluster_column = 'cell_types',
-                                           spatial_network_name = 'Delaunay_network',
-                                           adjust_method = 'fdr',
-                                           number_of_simulations = 1000)
-# barplot
-cellProximityBarplot(gobject = seqfish_mini, 
-                     CPscore = cell_proximities, 
-                     min_orig_ints = 5, min_sim_ints = 5)
-## heatmap
-cellProximityHeatmap(gobject = seqfish_mini, CPscore = cell_proximities, 
-                     order_cell_types = T, scale = T,
-                     color_breaks = c(-1.5, 0, 1.5), 
-                     color_names = c('blue', 'white', 'red'))
-# network
-cellProximityNetwork(gobject = seqfish_mini, CPscore = cell_proximities, 
-                     remove_self_edges = T, only_show_enrichment_edges = T)
-# network with self-edges
-cellProximityNetwork(gobject = seqfish_mini, CPscore = cell_proximities,
-                     remove_self_edges = F, self_loop_strength = 0.3,
-                     only_show_enrichment_edges = F,
-                     rescale_edge_weights = T,
-                     node_size = 8,
-                     edge_weight_range_depletion = c(1, 2),
-                     edge_weight_range_enrichment = c(2,5))
-```
-
-
-### visualization of specific cell types
-```{r }
-# Option 1
-spec_interaction = "cell D--cell F"
-cellProximitySpatPlot2D(gobject = seqfish_mini,
-                        interaction_name = spec_interaction,
-                        show_network = T,
-                        cluster_column = 'cell_types',
-                        cell_color = 'cell_types',
-                        cell_color_code = c('cell D' = 'lightblue', 'cell F' = 'red'),
-                        point_size_select = 4, point_size_other = 2)
-# Option 2: create additional metadata
-seqfish_mini = addCellIntMetadata(seqfish_mini,
-                             spatial_network = 'Delaunay_network',
-                             cluster_column = 'cell_types',
-                             cell_interaction = spec_interaction,
-                             name = 'D_F_interactions')
-spatPlot(seqfish_mini, cell_color = 'D_F_interactions', legend_symbol_size = 3,
-         select_cell_groups =  c('other_cell D', 'other_cell F', 'select_cell D', 'select_cell F'))
-```
 
 
 # cell neighborhood: interaction changed genes
@@ -499,7 +449,10 @@ Giotto supports multiple ways for searching for spatially variable genes. Curren
 ## SpatialDE
 The method uses Gaussian process regression to decompose expression variability into a spatial covariance term and nonspatial variance term. The spatial covariance term assumes a linear trend and periodic pattern of gene expression variation. Multiple different spatial covariance functions are tested including: (1) null model, (2) general Gaussian covariance (squared exponential), (3) linear covariance, and (4) periodic covariance functions. A suitable model is selected using Bayes information criterion.
 
-> spatialDE <- function(gobject = NULL, expression_values = c('raw', 'normalized', 'scaled', 'custom'), size = c(4,2,1), color = c("blue", "green", "red"), sig_alpha = 0.5, unsig_alpha = 0.5, python_path = NULL, show_plot = NA, return_plot = NA, save_plot = NA, save_param = list(), default_save_name = 'SpatialDE')
+
+### dataframe
+km_spatialgenes <- spatialDE(gobject = seqfish_mini, expression_values = c('raw', 'normalized', 'scaled', 'custom'), size = c(4,2,1), color = c("blue", "green", "red"), sig_alpha = 0.5, unsig_alpha = 0.5, python_path = NULL, show_plot = NA, return_plot = NA, save_plot = NA, save_param = list(), default_save_name = 'SpatialDE')
+km_spatialgenes
 
   
 The input is a gene expression matrix. There are 4 version of expression matrix (indicated by expression_values). Raw version (in counts) is recommended. SpatialDE performs library size normalization (by default) if raw expression is used. Otherwise, one can also use “normalized” and skip SpatialDE normalization step.
@@ -508,7 +461,6 @@ There are no other parameters required. The parameters color, sig_alpha, unsig_a
 
 ### Outputs
 A data frame with the results. There are 3 fields reported per gene: LLR, pval, qval. LLR is log-likelihood of model, useful for creating a whole ranking of genes unambiguously. P-val, Q-val are useful for cut-off based approach to filtering the spatial genes.
-
 
 
 
