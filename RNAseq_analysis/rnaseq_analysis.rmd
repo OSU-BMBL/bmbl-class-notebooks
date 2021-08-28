@@ -260,7 +260,6 @@ summary(res, alpha = 0.05)
 
 We can print out the differentially expressed genes (DEGs) table:
 
-
 The first column, **baseMean**, is the average of the normalized count values, divided by the size factors, taken over all samples in the DESeqDataSet.
 
 The column **log2FoldChange** is the effect size estimate. It tells us how much the gene’s expression seems to have changed due to treatment in comparison to untreated samples. In another words, This value is reported on a logarithmic scale to base 2: for example, a log2 fold change of 1.5 means that the gene’s expression is increased by a multiplicative factor of $2^{1.5} \approx 2.82$. A positive log2 fold-change values show that the gene is more highly expressed in the first group and is labelled as 'up-regulated'.
@@ -301,7 +300,7 @@ DT::datatable(
 
 The MA-plot visualize the log2 fold-change (M) on Y-axis and log of the mean of expression counts of samples (A) on X-axis. Genes with similar expression values in both compared groups will cluster around M=0 value (grey dots). i.e genes expressed with no significant differences in two groups. Up-regulated genes are colored in red, and down-regulated genes are colored in blue. I annotated 10 genes with smallest p-values in the figure. 
 
-```{r}
+```{r, fig.width=8, fig.height=8}
 
 ggmaplot(result,
          fdr = 0.05, fc = 1.5, size = 0.5,
@@ -318,11 +317,11 @@ ggmaplot(result,
 
 The volcano plot visualize the log of the p-value on Y-axis and log fold change of samples on X-axis. 
 
-The dashed line is the cutoff to annotate differentially expressed genes, here the cut-off for log2 fold-change is >|1.5|; the cut-off for the adjusted P value is 0.05. 
+The dashed line is the cutoff to annotate differentially expressed genes, here the cut-off for log2 fold-change is 1; the cut-off for the adjusted P value is 0.05. 
 
 This results in data points with low p values (highly significant) appearing toward the top of the plot. Points that are found toward the top of the plot that are far to either the left- or right-hand sides represent values that display large magnitude fold changes (hence being left or right of center) as well as high statistical significance. 
 
-```{r}
+```{r, fig.width=8, fig.height=8}
 
 top_up <- rownames(result[which(result$log2FoldChange > 0),])[1:5]
 top_down <- rownames(result[which(result$log2FoldChange < 0),])[1:5]
@@ -333,7 +332,7 @@ EnhancedVolcano(result,
     y = 'padj',
     selectLab = c(top_up,top_down),
     pCutoff = 0.05,
-    FCcutoff = 1.5,
+    FCcutoff = 1,
     )
     
 ```
@@ -351,19 +350,35 @@ We use two popular funtional annotation databases:
 
 - KEGG: genes associated with particular biological pathways
 
-## GO Biological Process
+Upload DEGs to enrichR, here we use DEGs with adj.p-value < 0.05 and absolute log foldchange > 1
+
+```{r}
+dbs <-
+  c(
+    "GO_Molecular_Function_2018",
+    "GO_Cellular_Component_2018",
+    "GO_Biological_Process_2018",
+    "KEGG_2019_Human"
+  )
+
+up_regulated_genes <- rownames(result[which(result$padj < 0.05 &
+                                              result$log2FoldChange > 1),])
+down_regulated_genes <- rownames(result[which(result$padj < 0.05 &
+                                                result$log2FoldChange < -1),])
+
+enriched_up <-
+  enrichr(up_regulated_genes, dbs)
+enriched_down <-
+  enrichr(down_regulated_genes, dbs)
+
+```
+
+## GO Biological Process - up regulated
 
 ```{r}
 
-## Select Gene ontology and KEGG pathway databases
-dbs <- c("GO_Molecular_Function_2018", "GO_Cellular_Component_2018", "GO_Biological_Process_2018","KEGG_2019_Human")
 
-# This select genes with adj.p.value < 0.05 and log2foldchange > 1.5 for enrichment analysis
-
-enriched_combined <- enrichr(rownames(result[which(result$padj < 0.05 & abs(result$log2FoldChange) > 1.5),]),dbs)
-
-# We only print the top 20 enriched terms
-DT::datatable(head(enriched_combined$GO_Biological_Process_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+DT::datatable(head(enriched_up$GO_Biological_Process_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
               options = list(
                 pageLength = 5,
                 scrollX = TRUE,
@@ -373,11 +388,11 @@ DT::datatable(head(enriched_combined$GO_Biological_Process_2018,n=20)[,c(-3,-5,-
               ))
 ```
 
-#### GO Cellular Component
+## GO Biological Process - down regulated
 
 ```{r}
 
-DT::datatable(head(enriched_combined$GO_Cellular_Component_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+DT::datatable(head(enriched_down$GO_Biological_Process_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
               options = list(
                 pageLength = 5,
                 scrollX = TRUE,
@@ -387,11 +402,11 @@ DT::datatable(head(enriched_combined$GO_Cellular_Component_2018,n=20)[,c(-3,-5,-
               ))
 ```
 
-#### GO Molecular Function
+## GO Cellular Component - up regulated
 
-```{r}
+```{r echo=F, fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
 
-DT::datatable(head(enriched_combined$GO_Molecular_Function_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+DT::datatable(head(enriched_up$GO_Cellular_Component_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
               options = list(
                 pageLength = 5,
                 scrollX = TRUE,
@@ -401,11 +416,12 @@ DT::datatable(head(enriched_combined$GO_Molecular_Function_2018,n=20)[,c(-3,-5,-
               ))
 ```
 
-#### KEGG pathway
 
-```{r}
+## GO Cellular Component - down regulated
 
-DT::datatable(head(enriched_combined$KEGG_2019_Human,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+```{r echo=F, fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
+
+DT::datatable(head(enriched_down$GO_Cellular_Component_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
               options = list(
                 pageLength = 5,
                 scrollX = TRUE,
@@ -415,6 +431,63 @@ DT::datatable(head(enriched_combined$KEGG_2019_Human,n=20)[,c(-3,-5,-6,-7)], ext
               ))
 ```
 
+
+## GO Molecular Function - up regulated
+
+```{r}
+
+DT::datatable(head(enriched_up$GO_Molecular_Function_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+              options = list(
+                pageLength = 5,
+                scrollX = TRUE,
+                scrollCollapse = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel')
+              ))
+```
+
+## GO Molecular Function - down regulated
+
+```{r}
+
+DT::datatable(head(enriched_down$GO_Molecular_Function_2018,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+              options = list(
+                pageLength = 5,
+                scrollX = TRUE,
+                scrollCollapse = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel')
+              ))
+```
+
+## KEGG pathway - up regulated
+
+```{r}
+
+DT::datatable(head(enriched_up$KEGG_2019_Human,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+              options = list(
+                pageLength = 5,
+                scrollX = TRUE,
+                scrollCollapse = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel')
+              ))
+```
+
+
+## KEGG pathway - down regulated
+
+```{r}
+
+DT::datatable(head(enriched_down$KEGG_2019_Human,n=20)[,c(-3,-5,-6,-7)], extensions = c('FixedColumns','Buttons'),
+              options = list(
+                pageLength = 5,
+                scrollX = TRUE,
+                scrollCollapse = TRUE,
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel')
+              ))
+```
 
 # Reference
 
