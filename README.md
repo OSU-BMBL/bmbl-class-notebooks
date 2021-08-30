@@ -25,8 +25,8 @@ The goal of this course is to introduce trainees to the fundamental algorithms n
 11. Spatial transcriptomics data analysis (Giotto)
 12. Spatial transcriptomics clustering analysis (BayesSpace)
 13. Spatial transcriptomics deconvolution analysis (Spotlight)
-14. Single cell immune profiling data analysis (scRepertoire)
-15. Single cell cell-cell communication analysis (CellChat)
+14. Single-cell immune profiling data analysis (scRepertoire)
+15. Single-cell RNA-seq cell-cell communication analysis (CellChat)
 
 ## About
 
