@@ -1,6 +1,6 @@
 ---
 title: "Single-cell RNA-seq Rmarkdown"
-author: "This lesson materials was originally created by Harvard Chan Bioinformatics Core, and has been developed by members of the BMBL."
+author: "YOUR_NAME"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output: 
   html_document:
