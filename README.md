@@ -28,6 +28,7 @@ The goal of this course is to introduce trainees to the fundamental algorithms n
 14. Spatial transcriptomics deconvolution analysis (Spotlight)
 15. Single-cell immune profiling data analysis (scRepertoire)
 16. Single-cell RNA-seq cell-cell communication analysis (CellChat)
+17. Single-cell RNA-seq data integration (Seurat)
 
 ## About
 

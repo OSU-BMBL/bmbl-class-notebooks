@@ -1,0 +1,408 @@
+---
+title: "Single-cell_RNA-seq_Rmarkdown"
+author: "YOUR_NAME"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+
+# Load libraries
+#devtools::install_github('satijalab/seurat-data')
+#install.packages("networkD3")
+#install.packages('BiocManager')
+#BiocManager::install('multtest')
+#install.packages('metap')
+library(SeuratData)
+library(SingleCellExperiment)
+library(Seurat)
+library(tidyverse)
+library(Matrix)
+library(scales)
+library(cowplot)
+library(RCurl)
+library(tidyr)
+library(networkD3)
+
+```
+
+# Data load and preprocessing
+
+```{r, message = FALSE, warning=FALSE}
+
+# Install the data using seurat-disk below if data("panc8") does not exist,
+# InstallData("panc8")
+
+data("panc8")
+pancreas.list <- SplitObject(panc8, split.by = "tech")
+pancreas.list <-
+  pancreas.list[c("celseq", "celseq2", "fluidigmc1", "smartseq2")]
+
+# normally, we use Read10X or read.table or read.csv
+#dat.1 <- Read10X(data.dir = "")
+#dat.2 <- Read10X(data.dir = "")
+
+#dat.1.obj <- CreateSeuratObject(counts = dat.1, project = "stim", min.cells = 3, min.features = 200)
+#dat.2.obj <- CreateSeuratObject(counts = dat.2, project = "ctrl", min.cells = 3, min.features = 200)
+
+#Give a group name ("treatment") and sample labels (stil and ctrl) to both data
+#dat.1.obj$treatment="stim"
+#dat.2.obj$treatment="ctrl"
+
+```
+
+```{r, message = FALSE, warning=FALSE}
+
+for (i in 1:length(pancreas.list)) {
+  pancreas.list[[i]] <-
+    NormalizeData(pancreas.list[[i]], verbose = FALSE)
+  pancreas.list[[i]] <-
+    FindVariableFeatures(
+      pancreas.list[[i]],
+      selection.method = "vst",
+      nfeatures = 2000,
+      verbose = FALSE
+    )
+}
+
+reference.list <- pancreas.list[c("celseq", "celseq2", "smartseq2")]
+
+```
+
+# Multiple data integration
+
+```{r, message = FALSE, warning=FALSE, fig.width=12, fig.height=7}
+
+# Find integration anchors and integrate data
+pancreas.anchors <-
+  FindIntegrationAnchors(object.list = reference.list, dims = 1:30)
+pancreas.integrated <-
+  IntegrateData(anchorset = pancreas.anchors, dims = 1:30)
+
+# switch to integrated assay.
+DefaultAssay(pancreas.integrated) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+pancreas.integrated <-
+  ScaleData(pancreas.integrated, verbose = FALSE)
+pancreas.integrated <-
+  RunPCA(pancreas.integrated, npcs = 30, verbose = FALSE)
+pancreas.integrated <-
+  RunUMAP(
+    pancreas.integrated,
+    reduction = "pca",
+    dims = 1:30,
+    verbose = FALSE
+  )
+
+# Number of cells in each condition
+table(pancreas.integrated$tech)
+table(pancreas.integrated@meta.data$tech,
+      pancreas.integrated@meta.data$celltype)
+
+# Visualization
+p1 <-
+  DimPlot(pancreas.integrated,
+          reduction = "umap",
+          group.by = "tech")
+
+p2 <-
+  DimPlot(
+    pancreas.integrated,
+    reduction = "umap",
+    group.by = "celltype",
+    label = TRUE,
+    repel = TRUE
+  ) + NoLegend()
+
+p1 + p2
+
+```
+
+```{r, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+
+p3 <-
+  DimPlot(pancreas.integrated,
+          reduction = "umap",
+          group.by = "celltype")
+
+LabelClusters(
+  p3,
+  id = "celltype",
+  color = unique(ggplot_build(p3)$data[[1]]$colour),
+  size = 5,
+  repel = T,
+  box.padding = 1.25
+)
+
+```
+
+```{r, message = FALSE, warning=FALSE, fig.width=12, fig.height=5}
+
+DimPlot(
+  pancreas.integrated,
+  reduction = "umap",
+  split.by = "tech",
+  label = TRUE
+)
+
+```
+
+# Find marker genes
+
+``` {r, message = FALSE, warning=FALSE}
+
+# Remember to switch to raw data for DEG
+DefaultAssay(pancreas.integrated) <- "RNA"
+
+# Find DEGs in celseq
+celseq.markers <-
+  FindMarkers(
+    pancreas.integrated,
+    ident.1 = "celseq",
+    group.by = "tech",
+    logfc.threshold = 0.25,
+    only.pos = TRUE
+  )
+
+# Find DEGs in alpha
+Idents(pancreas.integrated) <- "celltype"
+alpha.markers <-
+  FindMarkers(
+    pancreas.integrated,
+    ident.1 = "acinar",
+    logfc.threshold = 0.25,
+    only.pos = TRUE
+  )
+
+# Find conserved DEGs among techs
+conserve.markers <-
+  FindConservedMarkers(pancreas.integrated,
+                       ident.1 = c("acinar"),
+                       grouping.var = "tech")
+
+# Find DEGs for all techs
+Idents(pancreas.integrated) <- "tech"
+all.markers <-
+  FindAllMarkers(pancreas.integrated,
+                 logfc.threshold = 0.25,
+                 only.pos = TRUE)
+top_10_marker <-
+  all.markers %>% group_by(cluster) %>% top_n(n = 10, avg_log2FC)
+head(top_10_marker)
+
+# Draw heatmap
+DoHeatmap(
+  pancreas.integrated,
+  features = top_10_marker$gene,
+  slot = "counts",
+  size = 4
+) +
+  scale_fill_gradientn(colors = RColorBrewer::brewer.pal(n = 9, name = "RdBu"))
+
+```
+
+
+# Marker gene visualizations
+
+```{r, message = FALSE, warning=FALSE, fig.width=10, fig.height=7}
+
+VlnPlot(pancreas.integrated, features = c("REG1A"))
+
+VlnPlot(pancreas.integrated,
+        features = c("REG1A"),
+        group.by = "celltype")
+
+VlnPlot(
+  pancreas.integrated,
+  features = c("REG1A"),
+  group.by = "celltype",
+  split.by = "tech"
+)
+
+pancreas.integrated.sub <-
+  subset(pancreas.integrated, idents = c("celseq", "celseq2"))
+
+VlnPlot(
+  pancreas.integrated.sub,
+  features = c("REG1A"),
+  group.by = "celltype",
+  split.by = "tech",
+  cols = c("red", "grey", "blue"),
+  pt.size = 0
+)
+
+```
+
+```{r, message = FALSE, warning=FALSE, fig.width=12, fig.height=4}
+
+FeaturePlot(
+  pancreas.integrated,
+  features = c("REG1A"),
+  split.by = "tech",
+  max.cutoff = 3,
+  cols = c("grey", "red")
+)
+
+```
+
+
+# Reference mapping and cell type classification
+Seurat also supports the projection of reference data (or meta data) onto a query object. 
+While many of the methods are conserved (both procedures begin by identifying anchors), there are two important distinctions between data transfer and integration:
+
+*In data transfer, Seurat does not correct or modify the query expression data.
+*In data transfer, Seurat has an option (set by default) to project the PCA structure of a reference onto the query, instead of learning a joint structure with CCA. We generally suggest using this option when projecting data between scRNA-seq datasets.
+```{r, message = FALSE, warning=FALSE}
+
+# Use the integrated assay
+DefaultAssay(pancreas.integrated) <- "integrated"
+
+
+# setup the reference (query) object list (optional)
+pancreas.query <- pancreas.list[["fluidigmc1"]]
+
+# Find anchors for transfer
+pancreas.anchors <-
+  FindTransferAnchors(
+    reference = pancreas.integrated,
+    query = pancreas.query,
+    dims = 1:30,
+    reference.reduction = "pca"
+  )
+
+predictions <-
+  TransferData(anchorset = pancreas.anchors,
+               refdata = pancreas.integrated$celltype,
+               dims = 1:30)
+
+pancreas.query <-
+  AddMetaData(pancreas.query, metadata = predictions)
+
+pancreas.query$prediction.match <-
+  pancreas.query$predicted.id == pancreas.query$celltype
+
+table(pancreas.query$prediction.match)
+
+```
+
+```{r, message = FALSE, warning=FALSE}
+
+pancreas.integrated <-
+  RunUMAP(
+    pancreas.integrated,
+    dims = 1:30,
+    reduction = "pca",
+    return.model = TRUE
+  )
+pancreas.query <-
+  MapQuery(
+    anchorset = pancreas.anchors,
+    reference = pancreas.integrated,
+    query = pancreas.query,
+    refdata = list(celltype = "celltype"),
+    reference.reduction = "pca",
+    reduction.model = "umap"
+  )
+
+p1 <-
+  DimPlot(
+    pancreas.integrated,
+    reduction = "umap",
+    group.by = "celltype",
+    label = TRUE,
+    label.size = 3,
+    repel = TRUE
+  ) + NoLegend() + ggtitle("Reference annotations")
+p2 <-
+  DimPlot(
+    pancreas.query,
+    reduction = "ref.umap",
+    group.by = "predicted.celltype",
+    label = TRUE,
+    label.size = 3,
+    repel = TRUE
+  ) + NoLegend() + ggtitle("Query transferred labels")
+
+p1 + p2
+
+VlnPlot(pancreas.query,
+        features = c("REG1A"),
+        group.by = "celltype")
+
+pancreas.merge <- merge(pancreas.integrated, pancreas.query)
+
+VlnPlot(
+  pancreas.merge,
+  features = c("REG1A"),
+  group.by = "celltype",
+  split.by = "tech",
+  cols = c("red", "grey", "blue", "green"),
+  pt.size = 0
+)
+
+```
+
+# Darw a sankey plot (not covered by Seurat)
+
+``` {r, message = FALSE, warning=FALSE}
+
+sankey.dat <-
+  data.frame(
+    source = pancreas.query$predicted.id,
+    target = pancreas.query$celltype,
+    value = rep(1, length(pancreas.query$celltype))
+  )
+
+sankey.dat$new <- paste(sankey.dat$source, sankey.dat$target)
+
+# create a connecting data frame of label pair frequencies
+sankey.link  <- aggregate(value ~ new, sankey.dat, sum)
+sankey.link <-
+  separate(
+    sankey.link ,
+    col = new,
+    into = c("source", "target"),
+    sep = " "
+  )
+sankey.link$target <- paste(sankey.link$target, " ", sep = "")
+
+# create a node data frame of all unique labels
+sankey.nodes <- data.frame(name = c(
+  as.character(sankey.link$source),
+  as.character(sankey.link$target)
+) %>% unique())
+
+# transfer target and source names to node numbers
+sankey.link$IDsource <-
+  match(sankey.link$source, sankey.nodes$name) - 1
+sankey.link$IDtarget <-
+  match(sankey.link$target, sankey.nodes$name) - 1
+
+p <- sankeyNetwork(
+  Links = sankey.link,
+  Nodes = sankey.nodes,
+  Source = "IDsource",
+  Target = "IDtarget",
+  Value = "value",
+  NodeID = "name",
+  sinksRight = FALSE,
+  fontSize = 15,
+  nodeWidth = 40,
+  nodePadding = 10
+)
+p
+
+```
+
+
+```{r, echo=T,eval=T,message=F,warning=F,error=T}
+
+sessionInfo()
+
+```
