@@ -29,6 +29,7 @@ The goal of this course is to introduce trainees to the fundamental algorithms n
 15. Single-cell immune profiling data analysis (scRepertoire)
 16. Single-cell RNA-seq cell-cell communication analysis (CellChat)
 17. Single-cell RNA-seq data integration (Seurat)
+18. Single-cell RNA-seq cell type label transfer using atlas data (scANVI)
 
 ## About
 
