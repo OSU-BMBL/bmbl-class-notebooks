@@ -1,14 +1,4 @@
-# BMI8130-2021
-
-This is the repository for the **Analysis and Applications of Genome-Scale Data** course (BMI8130 on Autumn 2021)
-
-## Course description
-
-The goal of this course is to introduce trainees to the fundamental algorithms needed to understand and analyze genome-scale expression data sets. Special focus will be on single-cell data analysis. The course will cover three major categories:
-
-1. fundamental and advanced big-data analysis in solving real biological problems
-2. behind the scene: classic and cutting-edge algorithms/methods for tool development
-3. in-hand practice of using tools and data analysis. The course will include an introduction to, and hands-on experience with, the R statistical software environment and the use of R packages that can be applied to these kinds of problems
+# BMBL-notebooks
 
 ## Table of contents
 
