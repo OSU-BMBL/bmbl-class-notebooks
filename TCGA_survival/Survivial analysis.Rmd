@@ -1,0 +1,322 @@
+---
+title: "GARP analysis on glioblastoma (GBM)"
+date: "`r Sys.Date()`"
+author: Yuzhou Chang
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+library(rmarkdown)
+```{r setup, include=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggpubr)
+library(survival)
+library(lubridate)
+library(survminer)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(GSVA)
+```
+# Analysis task
+**1.	Effect of higher GARP expression (i.e. top 20% vs bottom 20%) on survival of GBM patients.**  
+*Solution*: This question needs large cohort bulk-RNAseq data with clinical and treatment information. We can perform survival analysis by grouping patients by GARP expression into top 20% and bottom 20% groups.
+
+
+**2.	Effect of GARP expression on the phenotype of GBM, i.e. whether there is a propensity to have a mesenchymal vs neuronal vs classical phenotype via gene signature.**  
+*Solution*: This question needs large cohort bulk RNA-seq data with GBM phenotype. We can compare GARP expression or GARP-TGFb relevant pathway activity (like I did analysis for Anqi’s paper).   
+The GARP-TGFb pathway relevant genes (Anqi provided):  
+
+Activation (activation co-factors): GARP (LRRC32), ITGB6, ITGB8, ITGAV 
+
+Platelet marker (co-factors): CD41 (ITGA2B), SELP, CD42a (GP9), CD42b (GP1BA)
+
+Thrombin coding gene (cleave GARP): F2
+
+
+**3.	Effect of GARP expression on angiogenesis, myeloid compartment, and T cell signaling/exhaustion pathways**
+*Solution*: We can also use bulk-RNAseq data. First, we can compute the activity of angiogenesis, myeloid compartment, and T cell signaling/exhaustion pathways for each sample. Second, we can calculate the correlation between GARP expression and those pathways’ activity. 
+
+
+# Data Overview
+TCGA_cell_2013 have 152 patients and the expression data was downloaded from [cBioPortal](!https://www.cbioportal.org/datasets) and the original paper is [here](!https://pubmed.ncbi.nlm.nih.gov/24120142/)
+
+## Preprocessing for contructing analysis object
+```{r, echo=FALSE}
+wd <- "e:/Dropbox/my-projects/Li_lab/Dan/"
+setwd(paste0(wd,"/biocPortal/"))
+#load("/bmbl_data/yuzhou/Li_lab/Dan/analysis/data_99_patient/meta_data.Rdata")
+
+# read.pathway
+angiogenesis_geneset <- read.table("../pathway_GSEA/ANGIOGENESIS.v2022.1.Hs.grp",header = T)
+angiogenesis_geneset <- angiogenesis_geneset$ANGIOGENESIS
+myeloid_compartment_geneset <- read.table("../pathway_GSEA/BROWN_MYELOID_CELL_DEVELOPMENT_UP.v2022.1.Hs.grp",header = T)
+myeloid_compartment_geneset <- myeloid_compartment_geneset$BROWN_MYELOID_CELL_DEVELOPMENT_UP
+Tcell_signal_geneset <- read.table("../pathway_GSEA/KEGG_T_CELL_RECEPTOR_SIGNALING_PATHWAY.v2022.1.Hs.grp",header = T)
+Tcell_signal_geneset <- Tcell_signal_geneset$KEGG_T_CELL_RECEPTOR_SIGNALING_PATHWAY
+Tcell_exhaustion_geneset <- read.table("../pathway_GSEA/GSE9650_EXHAUSTED_VS_MEMORY_CD8_TCELL_DN.v2022.1.Hs.grp",header = T)
+Tcell_exhaustion_geneset <- Tcell_exhaustion_geneset$GSE9650_EXHAUSTED_VS_MEMORY_CD8_TCELL_DN
+
+GARP_list <- c("LRRC32", "ITGB6", "ITGB8", "ITGAV",
+               "ITGA2B", "SELP", "GP9", "GP1BA","F2")
+pathway_list <- list(angiogenesis_geneset = angiogenesis_geneset,
+                     myeloid_compartment_geneset = myeloid_compartment_geneset,
+                     Tcell_signal_geneset = Tcell_signal_geneset,
+                     Tcell_exhaustion_geneset = Tcell_exhaustion_geneset,
+                     GARP_geneset = GARP_list)
+
+# TCGA_cell_2013
+TCGA_cell_2013_sample <- read.table("TCGA_cell_2013/data_clinical_sample.txt",header = T,check.names = F)
+TCGA_cell_2013_patient <- read.delim2("TCGA_cell_2013/data_clinical_patient.txt",check.names = F,header = T,comment.char = "#")
+identical(rownames(TCGA_cell_2013_sample),TCGA_cell_2013_patient$PATIENT_ID)
+TCGA_cell_2013_meta <- as.data.frame(cbind(ID = TCGA_cell_2013_patient$PATIENT_ID,
+                             sex = TCGA_cell_2013_patient$SEX,
+                             tutmor_type = TCGA_cell_2013_sample$SAMPLE_ID,
+                             OS_STATUS = TCGA_cell_2013_patient$OS_STATUS,
+                             OS_time = TCGA_cell_2013_patient$DFS_MONTHS))
+rownames(TCGA_cell_2013_meta) <- TCGA_cell_2013_meta$ID
+TCGA_cell_2013_exp <- read.delim("TCGA_cell_2013/data_mrna_seq_v2_rsem.txt",header = T,check.names = F)
+TCGA_cell_2013_exp <- TCGA_cell_2013_exp[-which(duplicated(TCGA_cell_2013_exp$Hugo_Symbol)),]
+rownames(TCGA_cell_2013_exp) <- TCGA_cell_2013_exp$Hugo_Symbol
+TCGA_cell_2013_exp$Hugo_Symbol <- NULL
+TCGA_cell_2013_exp$Entrez_Gene_Id <- NULL
+colnames(TCGA_cell_2013_exp) <- gsub("-01$","",colnames(TCGA_cell_2013_exp))
+TCGA_cell_2013_meta <- TCGA_cell_2013_meta[colnames(TCGA_cell_2013_exp),]
+GARP_list %in% rownames(TCGA_cell_2013_exp)
+# run pathway
+TCGA_cell_2013_pathway <- gsva(expr = as.matrix(TCGA_cell_2013_exp), gset.idx.list = pathway_list, verbose=FALSE)
+TCGA_cell_2013_meta <- TCGA_cell_2013_meta[colnames(TCGA_cell_2013_pathway),]
+identical(rownames(TCGA_cell_2013_meta),colnames(TCGA_cell_2013_pathway))
+identical(rownames(TCGA_cell_2013_meta),colnames(TCGA_cell_2013_exp))
+TCGA_cell_2013_meta$angiogenesis_geneset <- TCGA_cell_2013_pathway["angiogenesis_geneset",]
+TCGA_cell_2013_meta$myeloid_compartment_geneset <- TCGA_cell_2013_pathway["myeloid_compartment_geneset",]
+TCGA_cell_2013_meta$Tcell_signal_geneset <- TCGA_cell_2013_pathway["Tcell_signal_geneset",]
+TCGA_cell_2013_meta$Tcell_exhaustion_geneset <- TCGA_cell_2013_pathway["Tcell_exhaustion_geneset",]
+TCGA_cell_2013_meta$GARP_geneset <- TCGA_cell_2013_pathway["GARP_geneset",]
+TCGA_cell_2013_meta$GARP_expression <- as.numeric(TCGA_cell_2013_exp["LRRC32",])
+
+```
+
+
+# Task 1: Effect of higher GARP expression (i.e. top 20% vs bottom 20%) on survival of GBM patients.
+## Task 1 - TCGA_cell_2013 survival analysis for all tumor subtypes
+```{r, echo = F}
+# create censor
+TCGA_cell_2013_meta$censor <- ifelse(TCGA_cell_2013_meta$OS_STATUS == "1:DECEASED",1,0)
+# TCGA_cell_2013_meta[,c(2,3)] %>% tbl_summary()
+TCGA_cell_2013_meta <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$tutmor_type != "G-CIMP" & !is.na(TCGA_cell_2013_meta$tutmor_type),]
+#
+TCGA_cell_2013_meta$GARP_binary <- "no_group"
+TCGA_cell_2013_meta$GARP_binary <- ifelse(TCGA_cell_2013_meta$GARP_expression > quantile(TCGA_cell_2013_meta$GARP_expression,0.8,na.rm = T ),"high_expression",TCGA_cell_2013_meta$GARP_binary)
+TCGA_cell_2013_meta$GARP_binary <- ifelse(TCGA_cell_2013_meta$GARP_expression < quantile(TCGA_cell_2013_meta$GARP_expression,0.2,na.rm = T),"low_expression",TCGA_cell_2013_meta$GARP_binary)
+# table(TCGA_cell_2013_meta$GARP_binary )
+sub.meta.GARP <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$GARP_binary!="no_group",]
+sub.meta.GARP$OS_time <- as.numeric(sub.meta.GARP$OS_time)
+km_trt_fit <- survfit(Surv(OS_time, censor) ~ GARP_binary, data=sub.meta.GARP)
+ggsurvplot(km_trt_fit,pval = T)
+
+```
+
+## Task 1 - TCGA_cell_2013 survival analysis for four tumor subtypes 
+
+### Survival analysis for classical
+```{r, echo =F}
+TCGA_cell_2013_meta_Classical <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$tutmor_type == "Classical",]
+sub.meta_Classical.GARP <- TCGA_cell_2013_meta_Classical[TCGA_cell_2013_meta_Classical$GARP_binary!="no_group",]
+sub.meta_Classical.GARP$OS_time <- as.numeric(sub.meta_Classical.GARP$OS_time)
+km_trt_fit <- survfit(Surv(OS_time, censor) ~ GARP_binary, data=sub.meta_Classical.GARP)
+ggsurvplot(km_trt_fit,pval = T) + labs(title = "classical") 
+```
+
+### Survival analysis for mesenchymal  
+```{r, echo = F}
+TCGA_cell_2013_meta_Mesenchymal <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$tutmor_type == "Mesenchymal",]
+sub.meta_Mesenchymal.GARP <- TCGA_cell_2013_meta_Mesenchymal[TCGA_cell_2013_meta_Mesenchymal$GARP_binary!="no_group",]
+sub.meta_Mesenchymal.GARP$OS_time <- as.numeric(sub.meta_Mesenchymal.GARP$OS_time)
+km_trt_fit <- survfit(Surv(OS_time, censor) ~ GARP_binary, data=sub.meta_Mesenchymal.GARP)
+ggsurvplot(km_trt_fit,pval = T, ggtheme = theme_classic())+ labs(title = "Mesenchymal")
+```
+
+### Survival analysis for  neural  
+```{r, echo = F}
+TCGA_cell_2013_meta_Neural <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$tutmor_type == "Neural",]
+sub.meta_Neural.GARP <- TCGA_cell_2013_meta_Neural[TCGA_cell_2013_meta_Neural$GARP_binary!="no_group",]
+sub.meta_Neural.GARP$OS_time <- as.numeric(sub.meta_Neural.GARP$OS_time)
+km_trt_fit <- survfit(Surv(OS_time, censor) ~ GARP_binary, data=sub.meta_Neural.GARP)
+ggsurvplot(km_trt_fit,pval = T)+ labs(title = "Neural") 
+```
+
+### Survival analysis proneural  
+```{r, echo = F}
+TCGA_cell_2013_meta_Proneural <- TCGA_cell_2013_meta[TCGA_cell_2013_meta$tutmor_type == "Proneural",]
+sub.meta_Proneural.GARP <- TCGA_cell_2013_meta_Proneural[TCGA_cell_2013_meta_Proneural$GARP_binary!="no_group",]
+sub.meta_Proneural.GARP$OS_time <- as.numeric(sub.meta_Proneural.GARP$OS_time)
+km_trt_fit <- survfit(Surv(OS_time, censor) ~ GARP_binary, data=sub.meta_Proneural.GARP)
+ggsurvplot(km_trt_fit,pval = T)+ labs(title = "Proneural") 
+
+```
+
+
+# Task 2:	Effect of GARP expression on the phenotype of GBM
+In this analysis, we will compare GARP expression and GARP pathway activity among different GBM subtypes. The pathway activity is calculated by the GSVA algorithm.
+
+## Task 2-TCGA_cell_2013 
+
+We calculate p-values for any two groups regarding GARP expression and GARP pathway activity. 
+
+* Classical vs Mesenchymal 
+* Classical vs Proneural
+* Classical vs Neural
+* Mesenchymal vs Proneural
+* Mesenchymal vs Neural
+* Proneural vs Neural
+
+###  GARP expression
+
+```{r, echo = F,warning=F}
+TCGA_cell_2013_meta_GARP <-TCGA_cell_2013_meta[,c("tutmor_type","GARP_expression")]
+TCGA_cell_2013_meta_GARP <- TCGA_cell_2013_meta_GARP[!is.na(TCGA_cell_2013_meta_GARP$GARP_expression),]
+my.comparison <- list(c("Classical","Mesenchymal"),
+                      c("Classical", "Proneural"),
+                      c("Classical","Neural"),
+                      c("Mesenchymal","Proneural"),
+                      c("Mesenchymal","Neural"),
+                      c("Neural","Proneural"))
+
+
+
+ggboxplot(TCGA_cell_2013_meta_GARP, x = "tutmor_type", y = "GARP_expression",
+          color = "tutmor_type", palette = "jco")+ 
+  stat_compare_means(comparisons = my.comparison)
+
+```
+
+### GARP pathway activity
+
+```{r, echo = F,warning=F}
+TCGA_cell_2013_meta_GARP <-TCGA_cell_2013_meta[,c("tutmor_type","GARP_geneset")]
+TCGA_cell_2013_meta_GARP <- TCGA_cell_2013_meta_GARP[!is.na(TCGA_cell_2013_meta_GARP$GARP_geneset),]
+my.comparison <- list(c("Classical","Mesenchymal"),
+                      c("Classical", "Proneural"),
+                      c("Classical","Neural"),
+                      c("Mesenchymal","Proneural"),
+                      c("Mesenchymal","Neural"),
+                      c("Neural","Proneural"))
+
+
+
+ggboxplot(TCGA_cell_2013_meta_GARP, x = "tutmor_type", y = "GARP_geneset",
+          color = "tutmor_type", palette = "jco")+ 
+  stat_compare_means(comparisons = my.comparison)
+
+```
+
+# Task 3:	Effect of GARP expression and GARP pathway on angiogenesis, myeloid compartment, and T cell signaling/exhaustion pathways
+
+## Task3-TCGA_cell_2013
+
+### GARP Pearson correlation results based on all patients
+
+The X-axis is the GARP expression value. 
+
+The Y-axis is the enrichment score (a higher score means higher activity) regarding four pathways.
+
+```{r,echo=F,message=FALSE,warning=F}
+TCGA_cell_2013_meta$GARP_expression_log <- log1p(TCGA_cell_2013_meta$GARP_expression)
+p.angio <- ggscatter(TCGA_cell_2013_meta, x = "GARP_expression_log", y = "angiogenesis_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP vs angiogenesis",x = "log(GARP)", y ="angiogenesis enrichment score")+
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10)) # Add correlation coefficient
+
+p.myeloid <- ggscatter(TCGA_cell_2013_meta, x = "GARP_expression_log", y = "myeloid_compartment_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP vs myeloid_compartment",x = "log(GARP)", y ="myeloid compartment enrichment score") +
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10))# Add correlation coefficient
+
+p.Tcell_signal <- ggscatter(TCGA_cell_2013_meta, x = "GARP_expression_log", y = "Tcell_signal_geneset",
+          add = "reg.line", size = 1,                                 # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP vs Tcell_signal",x = "log(GARP)", y ="Tcell_signal enrichment score")+
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10)) # Add correlation coefficient
+
+p.Tcell_exhaustion <- ggscatter(TCGA_cell_2013_meta, x = "GARP_expression_log", y = "Tcell_exhaustion_geneset",
+          add = "reg.line", size = 1,                                 # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP vs Tcell_exhaustion",x = "log(GARP)", y ="Tcell_exhaustion nrichment score")+
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10)) # Add correlation coefficient
+
+grid.arrange(p.angio, p.myeloid, p.Tcell_signal,p.Tcell_exhaustion )
+
+```
+
+### GARP pathway Pearson correlation results based on all patients
+
+The X-axis is the GARP pathway enrichment score (a higher score means higher activity). 
+
+The Y-axis is the enrichment score regarding four pathways.
+
+```{r,echo=F,message=FALSE,warning=F}
+
+p.angio <- ggscatter(TCGA_cell_2013_meta, x = "GARP_geneset", y = "angiogenesis_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP pathway vs angiogenesis",x = "GARP pathway enrichment score", y ="angiogenesis enrichment score") +
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10))# Add correlation coefficient
+
+p.myeloid <- ggscatter(TCGA_cell_2013_meta, x = "GARP_geneset", y = "myeloid_compartment_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP pathway vs myeloid_compartment",x = "GARP pathway enrichment score", y ="myeloid compartment enrichment score") +
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10))# Add correlation coefficient
+
+p.Tcell_signal <- ggscatter(TCGA_cell_2013_meta, x = "GARP_geneset", y = "Tcell_signal_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP pathway vs Tcell_signal",x = "GARP pathway enrichment score", y ="Tcell_signal enrichment score")+
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10)) # Add correlation coefficient
+
+p.Tcell_exhaustion <- ggscatter(TCGA_cell_2013_meta, x = "GARP_geneset", y = "Tcell_exhaustion_geneset",
+          add = "reg.line",  size = 1,                                # Add regression line
+          conf.int = TRUE,                                  # Add confidence interval
+          add.params = list(color = "blue",
+                            fill = "lightgray")
+          )+
+  stat_cor(method = "pearson") + labs(title = "GARP pathway vs Tcell_exhaustion",x = "GARP pathway enrichment score", y ="Tcell_exhaustion nrichment score")+
+  theme(axis.text = element_text(size = 10),text = element_text(size = 10)) # Add correlation coefficient
+
+grid.arrange(p.angio, p.myeloid, p.Tcell_signal,p.Tcell_exhaustion )
+```
+
+
+
+
+
+
