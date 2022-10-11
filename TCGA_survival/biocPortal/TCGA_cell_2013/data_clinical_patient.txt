@@ -1,0 +1,582 @@
+#Patient Identifier	Diagnosis Age	Sex	Overall Survival Status	Overall Survival (Months)	Disease Free Status	Disease Free (Months)	therapy
+#Identifier to uniquely specify a patient.	Age at which a condition or disease was first diagnosed.	Sex	Overall patient survival status.	Overall survival in months since initial diagonosis.	Disease free status since initial treatment.	Disease free (months) since initial treatment.	therapy
+#STRING	NUMBER	STRING	STRING	NUMBER	STRING	NUMBER	STRING
+#1	1	1	9	1	1	1	1
+PATIENT_ID	AGE	SEX	OS_STATUS	OS_MONTHS	DFS_STATUS	DFS_MONTHS	THERAPY
+TCGA-02-0001	44.3	Female	1:DECEASED	11.6	1:Recurred/Progressed	4.5	Standard Radiation
+TCGA-02-0003	50.2	Male	1:DECEASED	4.7	1:Recurred/Progressed	1.3	Standard Radiation
+TCGA-02-0004	59.2	Male	1:DECEASED	11.3	1:Recurred/Progressed	10.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0006	56.2	Female	1:DECEASED	18.3	1:Recurred/Progressed	9.9	Standard Radiation, TMZ Chemo
+TCGA-02-0007	40.5	Female	1:DECEASED	23.2	1:Recurred/Progressed	17	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0009	61.5	Female	1:DECEASED	10.6	1:Recurred/Progressed	8.7	Nonstandard Radiation
+TCGA-02-0010	20.4	Female	1:DECEASED	35.4	1:Recurred/Progressed	11.5	Standard Radiation, TMZ Chemo
+TCGA-02-0011	19	Female	1:DECEASED	20.7	1:Recurred/Progressed	4.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0014	25.6	Male	1:DECEASED	82.6	1:Recurred/Progressed	73.8	Alkylating Chemoradiation, TMZ Chemo
+TCGA-02-0015	50.4	Male	1:DECEASED	20.6	1:Recurred/Progressed	15	Standard Radiation, Alkylating Chemo
+TCGA-02-0016	50	Male	0:LIVING	55.9	1:Recurred/Progressed	55.9	Standard Radiation, TMZ Chemo
+TCGA-02-0021	43.9	Female	1:DECEASED	77.6	1:Recurred/Progressed	8.4	Standard Radiation, TMZ Chemo
+TCGA-02-0023	38.3	Female	1:DECEASED	20.1	1:Recurred/Progressed	14.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0024	35.9	Male	1:DECEASED	53.1	1:Recurred/Progressed	46	Standard Radiation, TMZ Chemo
+TCGA-02-0025	47.6	Male	1:DECEASED	42.7	1:Recurred/Progressed	21.6	Standard Radiation, TMZ Chemo
+TCGA-02-0026	27.4	Male	1:DECEASED	24.6	1:Recurred/Progressed	15.2	Standard Radiation, TMZ Chemo
+TCGA-02-0027	33.9	Female	1:DECEASED	12.2	1:Recurred/Progressed	8.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0028	39.2	Male	1:DECEASED	90.6	1:Recurred/Progressed	63.2	Standard Radiation, TMZ Chemo
+TCGA-02-0033	55	Male	1:DECEASED	2.8	1:Recurred/Progressed	1.1	Standard Radiation
+TCGA-02-0034	60.7	Male	1:DECEASED	14.1	1:Recurred/Progressed	12.7	Standard Radiation, TMZ Chemo
+TCGA-02-0037	74.1	Female	1:DECEASED	3.6	1:Recurred/Progressed	1.2	Standard Radiation
+TCGA-02-0038	48.6	Female	1:DECEASED	10.7	1:Recurred/Progressed	7.8	Standard Radiation
+TCGA-02-0039	54.9	Male	1:DECEASED	10.5	1:Recurred/Progressed	3.4	Standard Radiation
+TCGA-02-0043	54.4	Female	1:DECEASED	18.3	1:Recurred/Progressed	9.3	Standard Radiation, Alkylating Chemo
+TCGA-02-0046	61.4	Male	1:DECEASED	6.8	1:Recurred/Progressed	6.4	Standard Radiation
+TCGA-02-0047	78.7	Male	1:DECEASED	14.7	1:Recurred/Progressed	1.9	Standard Radiation
+TCGA-02-0048	80.2	Male	1:DECEASED	3.2	1:Recurred/Progressed	0.8	Unspecified Radiation
+TCGA-02-0051	43.8	Male	1:DECEASED	15.1	1:Recurred/Progressed	2.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0052	49.5	Male	1:DECEASED	12.6	1:Recurred/Progressed	6.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0054	44.4	Female	1:DECEASED	6.5	1:Recurred/Progressed	2.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0055	62.4	Female	1:DECEASED	2.5	1:Recurred/Progressed	0.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0057	66.1	Female	1:DECEASED	19.9	1:Recurred/Progressed	15.6	Alkylating Chemoradiation, TMZ Chemo
+TCGA-02-0058	28.8	Female	1:DECEASED	8.4	1:Recurred/Progressed	5.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0059	68.7	Male	1:DECEASED	9.6	1:Recurred/Progressed	0.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0060	66.1	Female	1:DECEASED	6	1:Recurred/Progressed	6	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0064	50	Male	1:DECEASED	19.7	1:Recurred/Progressed	16.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0068	57.9	Male	1:DECEASED	26.4	1:Recurred/Progressed	5.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0069	31.9	Female	0:LIVING	28.7	1:Recurred/Progressed	28.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0070	71	Male	0:LIVING	25.1	1:Recurred/Progressed	25.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0071	53.2	Male	1:DECEASED	5.5	1:Recurred/Progressed	0.3	Unspecified Radiation
+TCGA-02-0074	68.2	Female	1:DECEASED	10.2	1:Recurred/Progressed	5.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0075	63.5	Male	1:DECEASED	20.8	1:Recurred/Progressed	11	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0079	58	Male	1:DECEASED	27.2	1:Recurred/Progressed	26.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0080	28.2	Male	1:DECEASED	89.7	1:Recurred/Progressed	76.9	Standard Radiation, TMZ Chemo
+TCGA-02-0083	59.2	Female	1:DECEASED	22.7	1:Recurred/Progressed	15.2	Standard Radiation, TMZ Chemo
+TCGA-02-0084	36.3	Female	1:DECEASED	12.6	0:DiseaseFree	12.6	Unspecified Therapy
+TCGA-02-0085	63.8	Female	1:DECEASED	51.3	1:Recurred/Progressed	32.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0086	45.9	Female	1:DECEASED	8.8	1:Recurred/Progressed	3.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0087	27.9	Female	0:LIVING	57.8	1:Recurred/Progressed	57.8	Standard Radiation
+TCGA-02-0089	52.7	Male	1:DECEASED	16.9	1:Recurred/Progressed	11.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0099	46.8	Male	1:DECEASED	3.5	0:DiseaseFree	3.5	Standard Radiation, TMZ Chemo
+TCGA-02-0102	42.9	Male	1:DECEASED	27	1:Recurred/Progressed	14.8	Standard Radiation, Alkylating Chemo
+TCGA-02-0104	29.3	Female	1:DECEASED	65	1:Recurred/Progressed	47.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0106	54.4	Male	1:DECEASED	11.7	1:Recurred/Progressed	6.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0107	56.3	Male	1:DECEASED	17.7	1:Recurred/Progressed	4.8	Standard Radiation, TMZ Chemo
+TCGA-02-0111	57	Male	1:DECEASED	23.2	1:Recurred/Progressed	2.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0113	43.4	Female	0:LIVING	92.6	1:Recurred/Progressed	51.3	Standard Radiation, TMZ Chemo
+TCGA-02-0114	37.5	Female	1:DECEASED	100	1:Recurred/Progressed	75.5	Standard Radiation, Alkylating Chemo
+TCGA-02-0115	52.7	Male	1:DECEASED	15.7	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-0116	51.1	Male	1:DECEASED	49	1:Recurred/Progressed	40.5	Standard Radiation, TMZ Chemo
+TCGA-02-0258	36.3	Female	1:DECEASED	16.5	1:Recurred/Progressed	16.5	Alkylating Chemoradiation, Alkylating Chemo
+TCGA-02-0260	54.6	Male	1:DECEASED	16.9	0:DiseaseFree	16.9	Standard Radiation
+TCGA-02-0266	14.5	Male	1:DECEASED	17.7	1:Recurred/Progressed	9.6	Standard Radiation, Alkylating Chemo
+TCGA-02-0269	69	Male	1:DECEASED	10.8	1:Recurred/Progressed	3.3	Alkylating Chemo
+TCGA-02-0271	26.2	Male	1:DECEASED	14.5	0:DiseaseFree	0	Unspecified Radiation
+TCGA-02-0281	78.6	Female	1:DECEASED	4	0:DiseaseFree	0	Nonstandard Radiation
+TCGA-02-0285	50.2	Female	1:DECEASED	13.9	0:DiseaseFree	0	Standard Radiation
+TCGA-02-0289	57.6	Male	1:DECEASED	14.2	1:Recurred/Progressed	8	Standard Radiation, Alkylating Chemo
+TCGA-02-0290	49.5	Male	1:DECEASED	15.9	1:Recurred/Progressed	12.3	Standard Radiation, Alkylating Chemo
+TCGA-02-0317	40.1	Male	1:DECEASED	12.2	1:Recurred/Progressed	7.8	Nonstandard Radiation
+TCGA-02-0321	74.3	Male	1:DECEASED	9.9	1:Recurred/Progressed	2.4	Standard Radiation
+TCGA-02-0324	69.4	Female	1:DECEASED	7.7	1:Recurred/Progressed	5.4	Standard Radiation
+TCGA-02-0325	61.9	Male	1:DECEASED	10.6	1:Recurred/Progressed	9.3	Standard Radiation, Alkylating Chemo
+TCGA-02-0326	82.6	Female	1:DECEASED	7.3	1:Recurred/Progressed	0.2	Nonstandard Radiation
+TCGA-02-0330	51.1	Female	1:DECEASED	15.9	1:Recurred/Progressed	3.9	Standard Radiation, Alkylating Chemo
+TCGA-02-0332	46.6	Female	1:DECEASED	25.7	1:Recurred/Progressed	14.4	Standard Radiation, Alkylating Chemo
+TCGA-02-0333	77.9	Female	1:DECEASED	4.4	1:Recurred/Progressed	0.1	Nonstandard Radiation
+TCGA-02-0337	48.3	Male	1:DECEASED	25.1	1:Recurred/Progressed	22.7	Standard Radiation, Alkylating Chemo
+TCGA-02-0338	41.7	Male	1:DECEASED	10.6	1:Recurred/Progressed	5.5	Standard Radiation
+TCGA-02-0339	67.1	Male	1:DECEASED	12.4	1:Recurred/Progressed	4.9	Nonstandard Radiation
+TCGA-02-0422	50.3	Male	1:DECEASED	14.5	1:Recurred/Progressed	4.1	Nonstandard Radiation
+TCGA-02-0430	67.5	Female	1:DECEASED	10.6	0:DiseaseFree	10.6	Standard Radiation
+TCGA-02-0432	36.3	Male	1:DECEASED	47.1	1:Recurred/Progressed	34.6	Standard Radiation, Alkylating Chemo
+TCGA-02-0439	70.2	Female	1:DECEASED	0.7	1:Recurred/Progressed	0.4	Nonstandard Radiation
+TCGA-02-0440	62.9	Male	1:DECEASED	11.3	1:Recurred/Progressed	7	Standard Radiation
+TCGA-02-0446	61.7	Male	1:DECEASED	9.2	1:Recurred/Progressed	0.5	Nonstandard Radiation
+TCGA-02-0451	62	Female	1:DECEASED	16.2	1:Recurred/Progressed	14	Nonstandard Radiation, Alkylating Chemo
+TCGA-02-0456	67.9	Female	1:DECEASED	3.4	1:Recurred/Progressed	0.4	Nonstandard Radiation
+TCGA-02-2466	61.5	Male	1:DECEASED	16.8	1:Recurred/Progressed	4.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-2470	57.5	Male	1:DECEASED	12.9	1:Recurred/Progressed	6	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-2483	43.7	Male	0:LIVING	15.3	0:DiseaseFree	15.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-2485	53.4	Male	0:LIVING	15.4	1:Recurred/Progressed	6.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-02-2486	64	Male	0:LIVING	16.2	0:DiseaseFree	16.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0122	84.8	Female	1:DECEASED	6.1	0:DiseaseFree	6.1	Unspecified Radiation
+TCGA-06-0124	67.3	Male	1:DECEASED	20.4	0:DiseaseFree	20.4	Unspecified Radiation, TMZ Chemo
+TCGA-06-0125	63.9	Female	1:DECEASED	47.6	1:Recurred/Progressed	26.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0126	86.6	Male	1:DECEASED	6.9	0:DiseaseFree	6.9	Unspecified Radiation
+TCGA-06-0127	67.1	Male	1:DECEASED	3.9	1:Recurred/Progressed	3	Standard Radiation
+TCGA-06-0128	66.3	Male	1:DECEASED	22.7	1:Recurred/Progressed	6.2	Standard Radiation, TMZ Chemo
+TCGA-06-0129	30.9	Male	1:DECEASED	33.7	1:Recurred/Progressed	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0130	54.2	Male	1:DECEASED	13	1:Recurred/Progressed	8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0132	49.6	Male	1:DECEASED	25.4	1:Recurred/Progressed	15.9	Standard Radiation, TMZ Chemo
+TCGA-06-0133	64.1	Male	1:DECEASED	14.3	1:Recurred/Progressed	2.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0137	63.7	Female	1:DECEASED	26.7	1:Recurred/Progressed	16	Standard Radiation, Alkylating Chemo
+TCGA-06-0138	43.1	Male	1:DECEASED	24.2	1:Recurred/Progressed	13	Standard Radiation, TMZ Chemo
+TCGA-06-0139	40.3	Male	1:DECEASED	11.9	1:Recurred/Progressed	5	Standard Radiation, TMZ Chemo
+TCGA-06-0141	62.8	Male	1:DECEASED	10.3	1:Recurred/Progressed	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0143	58.5	Male	1:DECEASED	11.7	1:Recurred/Progressed	8.7	Standard Radiation, TMZ Chemo
+TCGA-06-0145	53.8	Female	1:DECEASED	2.3	0:DiseaseFree	2.3	Unspecified Radiation
+TCGA-06-0146	33.5	Female	1:DECEASED	20.1	1:Recurred/Progressed	17.4	Alkylating Chemoradiation, Alkylating Chemo
+TCGA-06-0147	51.3	Female	1:DECEASED	17.8	0:DiseaseFree	17.8	Standard Radiation, TMZ Chemo
+TCGA-06-0148	76.2	Male	1:DECEASED	10.1	1:Recurred/Progressed	6.2	Standard Radiation
+TCGA-06-0149	74.8	Female	1:DECEASED	8.6	1:Recurred/Progressed	6.7	Standard Radiation, TMZ Chemo
+TCGA-06-0152	68	Male	1:DECEASED	12.3	1:Recurred/Progressed	9.8	Nonstandard Radiation
+TCGA-06-0154	54.8	Male	1:DECEASED	13.9	1:Recurred/Progressed	6.8	Standard Radiation
+TCGA-06-0155	61.6	Male	1:DECEASED	10.5	1:Recurred/Progressed	8.4	Standard Radiation, Alkylating Chemo
+TCGA-06-0156	57.3	Male	1:DECEASED	5.9	0:DiseaseFree	5.9	Standard Radiation
+TCGA-06-0157	63.3	Female	1:DECEASED	3.2	0:DiseaseFree	3.2	Standard Radiation
+TCGA-06-0158	73.5	Male	1:DECEASED	10.8	1:Recurred/Progressed	3	Standard Radiation, Alkylating Chemo
+TCGA-06-0162	47.3	Female	1:DECEASED	3.4	0:DiseaseFree	3.4	Nonstandard Radiation
+TCGA-06-0164	47.9	Male	1:DECEASED	56.9	1:Recurred/Progressed	47	Standard Radiation, Alkylating Chemo
+TCGA-06-0166	51.8	Male	1:DECEASED	5.9	1:Recurred/Progressed	2.2	Standard Radiation, Alkylating Chemo
+TCGA-06-0168	59.6	Female	1:DECEASED	19.7	1:Recurred/Progressed	15.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0169	68.8	Male	1:DECEASED	3.3	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0171	65.9	Male	1:DECEASED	13.1	1:Recurred/Progressed	3.8	Nonstandard Radiation, TMZ Chemo
+TCGA-06-0173	72.7	Female	1:DECEASED	4.5	0:DiseaseFree	4.5	Unspecified Radiation
+TCGA-06-0174	54.3	Male	1:DECEASED	3.2	1:Recurred/Progressed	1.5	Nonstandard Radiation
+TCGA-06-0175	70	Male	1:DECEASED	4	1:Recurred/Progressed	1.3	Standard Radiation
+TCGA-06-0176	35	Male	0:LIVING	51.3	1:Recurred/Progressed	1.3	Standard Radiation, TMZ Chemo
+TCGA-06-0177	64.3	Male	1:DECEASED	4.1	0:DiseaseFree	4.1	Unspecified Radiation
+TCGA-06-0178	39	Male	0:LIVING	54	1:Recurred/Progressed	6.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0179	64.2	Male	1:DECEASED	20.3	1:Recurred/Progressed	8.2	Standard Radiation, TMZ Chemo
+TCGA-06-0182	76.6	Male	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Radiation
+TCGA-06-0184	63.8	Male	0:LIVING	40.4	0:DiseaseFree	40.4	Standard Radiation, TMZ Chemo
+TCGA-06-0185	54.5	Male	0:LIVING	37	1:Recurred/Progressed	23.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0187	69.3	Male	1:DECEASED	27.2	1:Recurred/Progressed	17.5	Standard Radiation, TMZ Chemo
+TCGA-06-0188	71.4	Male	0:LIVING	28.5	0:DiseaseFree	28.5	Standard Radiation, TMZ Chemo
+TCGA-06-0189	55.6	Male	1:DECEASED	15.4	0:DiseaseFree	15.4	Standard Radiation, TMZ Chemo
+TCGA-06-0190	62.5	Male	1:DECEASED	10.4	1:Recurred/Progressed	2.9	Standard Radiation, TMZ Chemo
+TCGA-06-0192	58.2	Male	0:LIVING	18.3	0:DiseaseFree	18.3	Standard Radiation
+TCGA-06-0194	37.9	Female	1:DECEASED	4.7	1:Recurred/Progressed	4.1	Unspecified Radiation
+TCGA-06-0195	63.3	Male	1:DECEASED	7.4	1:Recurred/Progressed	4.8	Nonstandard Radiation
+TCGA-06-0197	66	Female	1:DECEASED	5.5	1:Recurred/Progressed	1.5	Unspecified Radiation
+TCGA-06-0201	51.1	Female	1:DECEASED	0.4	0:DiseaseFree	0.4	Unspecified Radiation
+TCGA-06-0206	40.9	Male	1:DECEASED	7.6	1:Recurred/Progressed	3.5	Unspecified Radiation, Alkylating Chemo
+TCGA-06-0208	52.3	Female	1:DECEASED	8.4	1:Recurred/Progressed	4.9	Nonstandard Radiation
+TCGA-06-0209	76.3	Male	1:DECEASED	7.6	0:DiseaseFree	7.6	Standard Radiation
+TCGA-06-0210	72.8	Female	1:DECEASED	7.4	1:Recurred/Progressed	2.2	Standard Radiation
+TCGA-06-0211	48	Male	1:DECEASED	11.8	1:Recurred/Progressed	1.7	Standard Radiation, Alkylating Chemo
+TCGA-06-0213	55.1	Female	1:DECEASED	0.5	0:DiseaseFree	0.5	Unspecified Radiation
+TCGA-06-0214	66.2	Male	1:DECEASED	15	1:Recurred/Progressed	1.6	Standard Radiation
+TCGA-06-0216	61.7	Female	1:DECEASED	24.2	1:Recurred/Progressed	5.8	Standard Radiation
+TCGA-06-0219	67	Male	1:DECEASED	0.7	0:DiseaseFree	0.7	Unspecified Radiation
+TCGA-06-0221	31	Male	1:DECEASED	19.8	1:Recurred/Progressed	8.5	Standard Radiation
+TCGA-06-0237	75.9	Female	1:DECEASED	13.6	0:DiseaseFree	13.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0238	46.6	Male	1:DECEASED	13.3	1:Recurred/Progressed	10.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0241	66	Female	0:LIVING	15	1:Recurred/Progressed	6.4	Standard Radiation
+TCGA-06-0394	51.8	Male	1:DECEASED	10.8	1:Recurred/Progressed	2.9	Nonstandard Radiation, Alkylating Chemo
+TCGA-06-0397	57.5	Female	1:DECEASED	4	0:DiseaseFree	4	Nonstandard Radiation, Alkylating Chemo
+TCGA-06-0402	71.3	Male	1:DECEASED	0.3	0:DiseaseFree	0.3	Unspecified Radiation
+TCGA-06-0409	43.9	Male	1:DECEASED	72.4	1:Recurred/Progressed	11	Standard Radiation, Alkylating Chemo
+TCGA-06-0410	76.9	Female	1:DECEASED	4.7	0:DiseaseFree	4.7	Unspecified Radiation
+TCGA-06-0412	56.5	Female	1:DECEASED	9.6	1:Recurred/Progressed	4.3	Nonstandard Radiation
+TCGA-06-0413	77.8	Female	1:DECEASED	3.2	0:DiseaseFree	3.2	Unspecified Radiation
+TCGA-06-0414	63.6	Male	1:DECEASED	35.1	1:Recurred/Progressed	33.3	Nonstandard Radiation, Alkylating Chemo
+TCGA-06-0644	71.9	Male	0:LIVING	12.3	1:Recurred/Progressed	2.8	Standard Radiation, TMZ Chemo
+TCGA-06-0645	56	Female	1:DECEASED	5.8	0:DiseaseFree	5.8	Unspecified Radiation
+TCGA-06-0646	61	Male	1:DECEASED	5.8	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0648	78	Male	1:DECEASED	9.8	1:Recurred/Progressed	6.6	Standard Radiation, TMZ Chemo
+TCGA-06-0649	73.4	Female	1:DECEASED	2.1	0:DiseaseFree	2.1	Unspecified Radiation
+TCGA-06-0650	39.9	Female	1:DECEASED	23.6	1:Recurred/Progressed	11.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0686	53.4	Male	0:LIVING	9.4	1:Recurred/Progressed	5.2	Standard Radiation, TMZ Chemo
+TCGA-06-0743	69.6	Male	0:LIVING	22.3	1:Recurred/Progressed	5.8	Standard Radiation
+TCGA-06-0744	67	Male	0:LIVING	19.5	0:DiseaseFree	19.5	Standard Radiation, TMZ Chemo
+TCGA-06-0745	59.9	Male	1:DECEASED	7.8	1:Recurred/Progressed	3	Standard Radiation
+TCGA-06-0747	53.8	Female	1:DECEASED	2.7	0:DiseaseFree	2.7	Standard Radiation
+TCGA-06-0749	50.8	Male	1:DECEASED	2.7	0:DiseaseFree	2.7	Nonstandard Radiation
+TCGA-06-0750	43.9	Male	1:DECEASED	0.9	0:DiseaseFree	0.9	Unspecified Radiation
+TCGA-06-0875	61.1	Female	0:LIVING	9.2	1:Recurred/Progressed	9.2	Standard Radiation, TMZ Chemo
+TCGA-06-0876	72.2	Female	0:LIVING	8.9	0:DiseaseFree	8.9	Standard Radiation, TMZ Chemo
+TCGA-06-0877	78.7	Male	0:LIVING	6.7	0:DiseaseFree	6.7	Nonstandard Radiation
+TCGA-06-0878	74.8	Male	0:LIVING	7.2	1:Recurred/Progressed	2.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0879	52.4	Male	0:LIVING	23	1:Recurred/Progressed	23	Standard Radiation, TMZ Chemo
+TCGA-06-0881	50	Male	0:LIVING	5.9	1:Recurred/Progressed	4.6	Standard Radiation, TMZ Chemo
+TCGA-06-0882	30.4	Male	0:LIVING	5.4	0:DiseaseFree	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-0939	79.1	Female	0:LIVING	20.9	1:Recurred/Progressed	10.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-1084	54.5	Male	0:LIVING	7.4	1:Recurred/Progressed	6.8	Standard Radiation, TMZ Chemo
+TCGA-06-1086	42.8	Male	1:DECEASED	6.8	0:DiseaseFree	6.8	Standard Radiation, TMZ Chemo
+TCGA-06-1087	75.7	Male	1:DECEASED	4	1:Recurred/Progressed	3.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-1800	61.1	Male	1:DECEASED	26.8	1:Recurred/Progressed	24.7	Standard Radiation, TMZ Chemo
+TCGA-06-1801	56.2	Female	0:LIVING	8.6	1:Recurred/Progressed	7.6	Standard Radiation, TMZ Chemo
+TCGA-06-1802	61.7	Male	0:LIVING	7.9	1:Recurred/Progressed	2.7	Standard Radiation, TMZ Chemo
+TCGA-06-1804	81.6	Female	1:DECEASED	13.6	0:DiseaseFree	13.6	Unspecified Therapy
+TCGA-06-1805	28.9	Female	0:LIVING	4.2	0:DiseaseFree	4.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2557	76.6	Male	1:DECEASED	1.1	0:DiseaseFree	1.1	Unspecified Radiation
+TCGA-06-2558	75.3	Female	1:DECEASED	12.5	0:DiseaseFree	12.5	Standard Radiation
+TCGA-06-2559	83.7	Male	1:DECEASED	4.9	0:DiseaseFree	4.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2561	53.4	Female	0:LIVING	9.3	1:Recurred/Progressed	2.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2562	81.5	Male	0:LIVING	2.8	1:Recurred/Progressed	2.8	Nonstandard Radiation, TMZ Chemo
+TCGA-06-2563	72.9	Female	0:LIVING	8.5	0:DiseaseFree	8.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2564	50.5	Male	0:LIVING	6	0:DiseaseFree	6	Nonstandard Radiation, TMZ Chemo
+TCGA-06-2565	59	Male	0:LIVING	6.8	1:Recurred/Progressed	5.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2566	23.1	Female	1:DECEASED	6	0:DiseaseFree	6	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-2567	65	Male	1:DECEASED	4.4	0:DiseaseFree	4.4	Nonstandard Radiation, TMZ Chemo
+TCGA-06-2569	24.4	Female	0:LIVING	0.4	0:DiseaseFree	0.4	Unspecified Radiation
+TCGA-06-2570	21.7	Female	0:LIVING	9.4	0:DiseaseFree	9.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5408	54.9	Female	1:DECEASED	11.7	1:Recurred/Progressed	5.2	Standard Radiation, TMZ Chemo
+TCGA-06-5410	72.3	Female	1:DECEASED	3.5	0:DiseaseFree	3.5	Unspecified Radiation
+TCGA-06-5411	51.6	Male	1:DECEASED	8.4	1:Recurred/Progressed	7	Standard Radiation, TMZ Chemo
+TCGA-06-5412	78.8	Female	1:DECEASED	4.5	1:Recurred/Progressed	2.9	Standard Radiation, TMZ Chemo
+TCGA-06-5413	67	Male	0:LIVING	8.8	1:Recurred/Progressed	6.4	Standard Radiation, TMZ Chemo
+TCGA-06-5414	61.7	Male	0:LIVING	9	1:Recurred/Progressed	5.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5415	60.8	Male	0:LIVING	8.5	0:DiseaseFree	8.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5416	23.4	Female	0:LIVING	6.7	0:DiseaseFree	6.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5417	45.4	Female	0:LIVING	5.1	0:DiseaseFree	5.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5418	75.5	Female	1:DECEASED	2.7	0:DiseaseFree	2.7	Unspecified Radiation
+TCGA-06-5856	58.1	Male	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Radiation
+TCGA-06-5858	45.6	Female	0:LIVING	6.1	1:Recurred/Progressed	3.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-5859	63.5	Male	0:LIVING	4.5	0:DiseaseFree	4.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6388	64.4	Female	1:DECEASED	5.2	1:Recurred/Progressed	2.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6389	50	Female	0:LIVING	7.8	0:DiseaseFree	7.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6390	58.4	Male	1:DECEASED	5.4	0:DiseaseFree	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6391	44.4	Female	1:DECEASED	1.4	0:DiseaseFree	1.4	Unspecified Radiation
+TCGA-06-6695	64.1	Male	0:LIVING	8.3	1:Recurred/Progressed	4.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6698	53.6	Female	0:LIVING	4.8	0:DiseaseFree	4.8	Nonstandard Radiation, TMZ Chemo
+TCGA-06-6700	76.2	Male	0:LIVING	4.8	0:DiseaseFree	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-06-6701	60.4	Male	0:LIVING	5	0:DiseaseFree	5	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0244	62.1	Male	1:DECEASED	22.7	1:Recurred/Progressed	15.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0245	31.8	Female	1:DECEASED	37.8	1:Recurred/Progressed	15.2	Standard Radiation, TMZ Chemo
+TCGA-08-0246	57.4	Female	1:DECEASED	4.2	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0344	66.4	Male	1:DECEASED	115.9	1:Recurred/Progressed	61.8	Nonstandard Radiation, Alkylating Chemo
+TCGA-08-0345	71.1	Female	1:DECEASED	1.7	0:DiseaseFree	1.7	Nonstandard Radiation
+TCGA-08-0346	69.6	Male	1:DECEASED	8.4	1:Recurred/Progressed	2.5	Standard Radiation
+TCGA-08-0347	50.3	Male	1:DECEASED	25.7	1:Recurred/Progressed	1.9	Standard Radiation, Alkylating Chemo
+TCGA-08-0348	64	Male	1:DECEASED	12.2	1:Recurred/Progressed	6.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0349	46.4	Male	1:DECEASED	9.8	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0350	32.6	Male	1:DECEASED	29.2	1:Recurred/Progressed	14.4	Standard Radiation, TMZ Chemo
+TCGA-08-0351	40.6	Male	1:DECEASED	65.3	1:Recurred/Progressed	50.7	Standard Radiation, TMZ Chemo
+TCGA-08-0352	79.7	Male	1:DECEASED	1.3	0:DiseaseFree	1.3	Unspecified Radiation
+TCGA-08-0353	58.4	Male	1:DECEASED	8.4	1:Recurred/Progressed	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0354	52.6	Female	1:DECEASED	18	1:Recurred/Progressed	8.3	Standard Radiation, TMZ Chemo
+TCGA-08-0355	30.4	Female	1:DECEASED	24.6	1:Recurred/Progressed	17.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0356	60	Female	1:DECEASED	31.1	1:Recurred/Progressed	14.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0357	49.7	Male	1:DECEASED	37.6	1:Recurred/Progressed	5.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0358	50.3	Male	1:DECEASED	22.3	1:Recurred/Progressed	8.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0359	59.5	Female	1:DECEASED	3.4	0:DiseaseFree	3.4	Nonstandard Radiation
+TCGA-08-0360	76.4	Male	1:DECEASED	15.4	1:Recurred/Progressed	3.7	Standard Radiation
+TCGA-08-0373	69.2	Male	1:DECEASED	4.4	0:DiseaseFree	4.4	Unspecified Therapy
+TCGA-08-0375	51.9	Female	1:DECEASED	12.2	1:Recurred/Progressed	5.3	Standard Radiation
+TCGA-08-0380	74.7	Female	1:DECEASED	14.9	1:Recurred/Progressed	5	Standard Radiation, TMZ Chemo
+TCGA-08-0385	71.8	Male	1:DECEASED	2.7	0:DiseaseFree	2.7	Unspecified Therapy
+TCGA-08-0386	74.1	Male	1:DECEASED	18	1:Recurred/Progressed	14	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0389	59.2	Male	1:DECEASED	15.4	0:DiseaseFree	15.4	Nonstandard Radiation, TMZ Chemo
+TCGA-08-0390	69.3	Male	1:DECEASED	14	0:DiseaseFree	14	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0392	60.4	Male	1:DECEASED	0.7	0:DiseaseFree	0.7	Unspecified Radiation
+TCGA-08-0509	63.7	Male	1:DECEASED	12.6	0:DiseaseFree	12.6	Unspecified Therapy
+TCGA-08-0510	75.8	Male	1:DECEASED	4.2	1:Recurred/Progressed	2.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0511	69.3	Male	1:DECEASED	7.7	0:DiseaseFree	7.7	Nonstandard Radiation, Alkylating Chemo
+TCGA-08-0512	48.8	Male	1:DECEASED	42.2	1:Recurred/Progressed	7.6	Standard Radiation
+TCGA-08-0514	69.7	Female	1:DECEASED	11.1	0:DiseaseFree	11.1	Standard Radiation
+TCGA-08-0516	14.5	Male	1:DECEASED	19.6	1:Recurred/Progressed	1.3	Nonstandard Radiation
+TCGA-08-0517	35	Female	1:DECEASED	58.7	1:Recurred/Progressed	33.7	Standard Radiation, Alkylating Chemo
+TCGA-08-0518	60.2	Female	1:DECEASED	19.3	1:Recurred/Progressed	4.4	Standard Radiation
+TCGA-08-0520	70.5	Male	1:DECEASED	10.7	1:Recurred/Progressed	3.5	Standard Radiation, TMZ Chemo
+TCGA-08-0521	17.5	Male	1:DECEASED	4.8	1:Recurred/Progressed	4.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0522	61.4	Male	1:DECEASED	20.9	1:Recurred/Progressed	8.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0524	17.7	Female	1:DECEASED	7.2	1:Recurred/Progressed	2	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0525	52	Male	1:DECEASED	16	1:Recurred/Progressed	11.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0529	56.3	Female	1:DECEASED	18.4	1:Recurred/Progressed	10.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-08-0531	64.3	Male	1:DECEASED	7.6	0:DiseaseFree	7.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0615	78.3	Female	1:DECEASED	15.3	1:Recurred/Progressed	5.2	Nonstandard Radiation, TMZ Chemo
+TCGA-12-0616	36.8	Female	1:DECEASED	14.7	1:Recurred/Progressed	13.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0618	49.5	Male	1:DECEASED	13	0:DiseaseFree	13	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0619	60	Male	1:DECEASED	34.9	1:Recurred/Progressed	6.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0620	57.7	Male	1:DECEASED	10.5	0:DiseaseFree	10.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0654	48.2	Female	1:DECEASED	7.6	1:Recurred/Progressed	7.1	Standard Radiation
+TCGA-12-0656	48.9	Female	1:DECEASED	94.8	1:Recurred/Progressed	48.2	Standard Radiation, TMZ Chemo
+TCGA-12-0657	69.6	Male	1:DECEASED	0.1	0:DiseaseFree	0.1	Unspecified Radiation
+TCGA-12-0662	51.2	Male	1:DECEASED	38.2	1:Recurred/Progressed	19.7	Standard Radiation, TMZ Chemo
+TCGA-12-0670	60.8	Male	1:DECEASED	26	1:Recurred/Progressed	12.5	Standard Radiation, TMZ Chemo
+TCGA-12-0688	74.2	Male	1:DECEASED	26.7	1:Recurred/Progressed	7.5	Standard Radiation, TMZ Chemo
+TCGA-12-0691	63	Male	1:DECEASED	12.1	1:Recurred/Progressed	3.2	Standard Radiation, TMZ Chemo
+TCGA-12-0692	75.3	Female	1:DECEASED	3.7	1:Recurred/Progressed	1.2	TMZ Chemo
+TCGA-12-0703	46.9	Male	1:DECEASED	20.4	1:Recurred/Progressed	6.8	Standard Radiation, Alkylating Chemo
+TCGA-12-0707	55.1	Male	1:DECEASED	28.4	0:DiseaseFree	28.4	Unspecified Therapy
+TCGA-12-0769	52.5	Male	1:DECEASED	15.1	1:Recurred/Progressed	12.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0772	46.6	Male	1:DECEASED	53.9	1:Recurred/Progressed	20	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0773	24.2	Male	1:DECEASED	43.2	1:Recurred/Progressed	23.8	Standard Radiation, TMZ Chemo
+TCGA-12-0775	75.5	Female	1:DECEASED	7.6	1:Recurred/Progressed	3.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0776	52.6	Male	1:DECEASED	9.7	1:Recurred/Progressed	4.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0778	53.3	Male	1:DECEASED	14.9	1:Recurred/Progressed	7.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0780	51	Female	1:DECEASED	14.9	1:Recurred/Progressed	3	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-0818	45.6	Female	1:DECEASED	91.7	0:DiseaseFree	91.7	Alkylating Chemoradiation, Alkylating Chemo
+TCGA-12-0819	49.7	Female	1:DECEASED	24.8	1:Recurred/Progressed	14	Standard Radiation, Alkylating Chemo
+TCGA-12-0820	40.7	Male	1:DECEASED	18.5	1:Recurred/Progressed	8.9	Standard Radiation, TMZ Chemo
+TCGA-12-0821	62.8	Male	1:DECEASED	10.6	1:Recurred/Progressed	8.5	Standard Radiation, Alkylating Chemo
+TCGA-12-0822	46	Male	1:DECEASED	23.5	1:Recurred/Progressed	3	Standard Radiation, TMZ Chemo
+TCGA-12-0826	38	Male	1:DECEASED	27.8	0:DiseaseFree	27.8	Unspecified Therapy
+TCGA-12-0827	38.6	Female	1:DECEASED	38.8	0:DiseaseFree	38.8	Standard Radiation, TMZ Chemo
+TCGA-12-0828	57.2	Male	1:DECEASED	8.9	1:Recurred/Progressed	0.4	Standard Radiation, TMZ Chemo
+TCGA-12-0829	75.2	Male	1:DECEASED	20.6	1:Recurred/Progressed	15.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1088	53.9	Female	1:DECEASED	127.6	0:DiseaseFree	127.6	Standard Radiation, Alkylating Chemo
+TCGA-12-1089	64.1	Male	1:DECEASED	5.8	0:DiseaseFree	5.8	Standard Radiation, Alkylating Chemo
+TCGA-12-1090	58.5	Male	1:DECEASED	7.6	0:DiseaseFree	7.6	Standard Radiation, Alkylating Chemo
+TCGA-12-1091	10.9	Female	1:DECEASED	33.2	1:Recurred/Progressed	1.8	Standard Radiation, TMZ Chemo
+TCGA-12-1092	58.6	Male	1:DECEASED	21.7	1:Recurred/Progressed	20.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1093	66.5	Female	1:DECEASED	16	1:Recurred/Progressed	10.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1094	56.4	Male	1:DECEASED	12.2	1:Recurred/Progressed	6.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1095	65.1	Female	1:DECEASED	15.9	1:Recurred/Progressed	3.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1096	55.6	Male	1:DECEASED	9.1	1:Recurred/Progressed	8.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1097	61.7	Male	1:DECEASED	14.5	1:Recurred/Progressed	5.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1098	75.9	Female	1:DECEASED	4	1:Recurred/Progressed	3.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1099	68.5	Female	1:DECEASED	4.1	1:Recurred/Progressed	2	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1597	62.6	Female	1:DECEASED	22.2	1:Recurred/Progressed	5.9	Standard Radiation, TMZ Chemo
+TCGA-12-1598	75.9	Female	1:DECEASED	15.7	0:DiseaseFree	15.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1599	47.7	Female	1:DECEASED	25.7	1:Recurred/Progressed	2.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1600	86	Male	1:DECEASED	14.7	1:Recurred/Progressed	13.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-1602	58.8	Male	1:DECEASED	6.7	1:Recurred/Progressed	4.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3644	47.8	Female	1:DECEASED	59.8	1:Recurred/Progressed	37.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3646	59.8	Female	1:DECEASED	44	1:Recurred/Progressed	43.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3648	61.5	Female	1:DECEASED	26.9	1:Recurred/Progressed	2.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3649	76.2	Male	1:DECEASED	15.2	1:Recurred/Progressed	11.5	TMZ Chemo
+TCGA-12-3650	46.9	Male	1:DECEASED	11	1:Recurred/Progressed	7.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3651	77.4	Male	1:DECEASED	12.7	1:Recurred/Progressed	11.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3652	60	Male	1:DECEASED	34.9	1:Recurred/Progressed	6.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-3653	34.3	Female	1:DECEASED	14.5	1:Recurred/Progressed	7.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-5295	60.7	Female	1:DECEASED	14.9	1:Recurred/Progressed	13.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-5299	56	Female	1:DECEASED	3.2	0:DiseaseFree	3.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-12-5301	59.6	Male	1:DECEASED	2	0:DiseaseFree	2	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-0736	49.9	Male	1:DECEASED	15.1	1:Recurred/Progressed	4.2	Standard Radiation, TMZ Chemo
+TCGA-14-0740	70.2	Male	1:DECEASED	12	0:DiseaseFree	12	Standard Radiation
+TCGA-14-0781	49	Male	1:DECEASED	1	0:DiseaseFree	1	Unspecified Radiation
+TCGA-14-0783	36	Female	1:DECEASED	6.2	0:DiseaseFree	6.2	Alkylating Chemoradiation, Alkylating Chemo
+TCGA-14-0786	50.9	Female	1:DECEASED	23.1	1:Recurred/Progressed	4.2	Standard Radiation, TMZ Chemo
+TCGA-14-0787	69.3	Male	1:DECEASED	2.2	0:DiseaseFree	2.2	Unspecified Radiation
+TCGA-14-0789	54.9	Male	1:DECEASED	11.2	1:Recurred/Progressed	3.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-0790	64.8	Female	1:DECEASED	13.7	0:DiseaseFree	13.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-0812	65.9	Male	1:DECEASED	3.3	0:DiseaseFree	3.3	Alkylating Chemo
+TCGA-14-0813	78.2	Male	1:DECEASED	1.3	0:DiseaseFree	1.3	Unspecified Radiation
+TCGA-14-0817	69.6	Female	1:DECEASED	5.4	0:DiseaseFree	5.4	Unspecified Radiation
+TCGA-14-0865	67.9	Male	1:DECEASED	16.5	1:Recurred/Progressed	7.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-0866	55.2	Male	1:DECEASED	26.3	1:Recurred/Progressed	3.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-0867	67.9	Male	1:DECEASED	2	0:DiseaseFree	2	Unspecified Radiation
+TCGA-14-0871	75	Female	1:DECEASED	28.9	0:DiseaseFree	28.9	Standard Radiation
+TCGA-14-1034	60.3	Female	1:DECEASED	15.9	1:Recurred/Progressed	9	Standard Radiation, Alkylating Chemo
+TCGA-14-1037	66.9	Female	1:DECEASED	19.3	1:Recurred/Progressed	10.7	Standard Radiation, TMZ Chemo
+TCGA-14-1043	61.3	Male	1:DECEASED	0.8	0:DiseaseFree	0.8	Nonstandard Radiation
+TCGA-14-1395	52.7	Male	1:DECEASED	1.4	0:DiseaseFree	1.4	Alkylating Chemo
+TCGA-14-1396	78.7	Female	1:DECEASED	1.1	0:DiseaseFree	1.1	Unspecified Radiation
+TCGA-14-1401	54.5	Male	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Radiation
+TCGA-14-1402	58.6	Female	1:DECEASED	32	1:Recurred/Progressed	11	Standard Radiation, TMZ Chemo
+TCGA-14-1450	57.4	Male	0:LIVING	58.8	1:Recurred/Progressed	27.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1451	39.4	Male	1:DECEASED	23.1	1:Recurred/Progressed	0.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1452	60.5	Male	1:DECEASED	7.1	1:Recurred/Progressed	5.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1453	69.3	Male	1:DECEASED	1.2	0:DiseaseFree	1.2	Unspecified Radiation
+TCGA-14-1454	54.5	Female	1:DECEASED	30.2	1:Recurred/Progressed	9.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1455	61.8	Male	1:DECEASED	0.9	0:DiseaseFree	0.9	Alkylating Chemo
+TCGA-14-1456	23.9	Male	0:LIVING	40.9	1:Recurred/Progressed	3.2	Standard Radiation
+TCGA-14-1458	54.5	Male	1:DECEASED	6.6	1:Recurred/Progressed	2.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1459	63.6	Female	1:DECEASED	12.4	1:Recurred/Progressed	9	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1794	59.2	Male	1:DECEASED	1	0:DiseaseFree	1	Nonstandard Radiation
+TCGA-14-1795	66.7	Male	1:DECEASED	1.9	0:DiseaseFree	1.9	Alkylating Chemo
+TCGA-14-1821	31	Male	1:DECEASED	17.8	1:Recurred/Progressed	10.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1823	58.5	Female	1:DECEASED	17.8	1:Recurred/Progressed	4.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-1824	67.2	Female	1:DECEASED	19.6	0:DiseaseFree	19.6	Standard Radiation
+TCGA-14-1825	70.3	Male	1:DECEASED	7.6	1:Recurred/Progressed	3	Standard Radiation
+TCGA-14-1827	51.5	Male	1:DECEASED	5.9	0:DiseaseFree	5.9	Alkylating Chemo
+TCGA-14-1829	57.3	Male	0:LIVING	7.1	0:DiseaseFree	7.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-2554	52.3	Female	1:DECEASED	17.5	0:DiseaseFree	17.5	Nonstandard Radiation
+TCGA-14-2555	44.5	Female	0:LIVING	8	0:DiseaseFree	8	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-3476	74.4	Male	1:DECEASED	0.4	1:Recurred/Progressed	0.3	Unspecified Radiation
+TCGA-14-3477	38.5	Female	0:LIVING	3.7	0:DiseaseFree	3.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-14-4157	40.6	Male	0:LIVING	3.4	1:Recurred/Progressed	3.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-15-0742	65.8	Male	1:DECEASED	13.7	1:Recurred/Progressed	7.6	Nonstandard Radiation, TMZ Chemo
+TCGA-15-1444				0	0:DiseaseFree		Unspecified Radiation
+TCGA-15-1446	55.7	Male	0:LIVING	19.1	1:Recurred/Progressed	14.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-15-1447	36.5	Female	0:LIVING	53.2	1:Recurred/Progressed	11.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-15-1449	65.2	Male	1:DECEASED	13.3	1:Recurred/Progressed	2.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-16-0846	85.2	Male	1:DECEASED	3.9	0:DiseaseFree	3.9	Unspecified Radiation
+TCGA-16-0848	57.1	Male	1:DECEASED	17.6	1:Recurred/Progressed	4.2	Standard Radiation
+TCGA-16-0849	54.6	Male	0:LIVING	26.1	0:DiseaseFree	26.1	Standard Radiation
+TCGA-16-0850	52.8	Female	1:DECEASED	16.4	1:Recurred/Progressed	2.7	Standard Radiation
+TCGA-16-0861	65.1	Male		0	1:Recurred/Progressed	3.1	Standard Radiation
+TCGA-16-1045	49.8	Female	1:DECEASED	29	1:Recurred/Progressed	21.5	Standard Radiation
+TCGA-16-1047	66.5	Female	1:DECEASED	4.6	1:Recurred/Progressed	0.8	Unspecified Radiation
+TCGA-16-1055	48.8	Male	1:DECEASED	10.3	1:Recurred/Progressed	9.5	Standard Radiation
+TCGA-16-1056	55.6	Male	1:DECEASED	14	1:Recurred/Progressed	7.9	Standard Radiation
+TCGA-16-1060	70.7	Female	1:DECEASED	9.1	1:Recurred/Progressed	3.7	Nonstandard Radiation
+TCGA-16-1062	57.9	Female	1:DECEASED	21.2	1:Recurred/Progressed	17	Standard Radiation
+TCGA-16-1063	72	Male	1:DECEASED	14	1:Recurred/Progressed	12.1	Standard Radiation
+TCGA-16-1460	36.2	Female	0:LIVING	6.4	0:DiseaseFree	6.4	Unspecified Radiation
+TCGA-19-0955	71.1	Male	0:LIVING	11.8	0:DiseaseFree	11.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-0957	48.5	Female	1:DECEASED	21.9	1:Recurred/Progressed	1.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-0960	83.1	Female	0:LIVING	8.6	0:DiseaseFree	8.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-0962	77.7	Female	1:DECEASED	0.7	0:DiseaseFree	0.7	Unspecified Radiation
+TCGA-19-0963	61.1	Male	1:DECEASED	14.3	1:Recurred/Progressed	10.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-0964	70.6	Male	0:LIVING	3.4	0:DiseaseFree	3.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1385	69.7	Male	1:DECEASED	10.8	1:Recurred/Progressed	5.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1386	51.1	Male	1:DECEASED	9.1	1:Recurred/Progressed	7.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1387	81.8	Male	0:LIVING	6	1:Recurred/Progressed	2.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1388	58.5	Male	1:DECEASED	13	1:Recurred/Progressed	4.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1389	51.1	Male	1:DECEASED	4.6	1:Recurred/Progressed	2.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1390	63.1	Female	1:DECEASED	25.4	0:DiseaseFree	25.4	Unspecified Radiation
+TCGA-19-1392	72.8	Female	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Radiation
+TCGA-19-1786	64.5	Female	0:LIVING	7.1	0:DiseaseFree	7.1	Standard Radiation
+TCGA-19-1787	49	Male	1:DECEASED	12.7	1:Recurred/Progressed	10.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1788	39.1	Male	1:DECEASED	3.7	0:DiseaseFree	3.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1789	69.2	Female	1:DECEASED	3.1	0:DiseaseFree	3.1	Standard Radiation, TMZ Chemo
+TCGA-19-1790	56.5	Male	1:DECEASED	5	1:Recurred/Progressed	2.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-1791	82.3	Female	0:LIVING	0.1	0:DiseaseFree	0.1	Unspecified Radiation
+TCGA-19-2619	55.2	Female	0:LIVING	9.7	1:Recurred/Progressed	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-2620	70.3	Male	1:DECEASED	4.9	0:DiseaseFree	4.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-2621	83.3	Male	1:DECEASED	1.1	0:DiseaseFree	1.1	Unspecified Radiation
+TCGA-19-2623	65.3	Male	0:LIVING	7.5	0:DiseaseFree	7.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-2624	51.7	Male	1:DECEASED	0.2	0:DiseaseFree	0.2	Unspecified Radiation
+TCGA-19-2625	76.5	Female	1:DECEASED	4.1	0:DiseaseFree	4.1	Unspecified Radiation
+TCGA-19-2629	60.9	Male	1:DECEASED	24.2	1:Recurred/Progressed	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-2631	74.5	Female	1:DECEASED	7	0:DiseaseFree	7	Standard Radiation
+TCGA-19-4068	68.3	Female	0:LIVING	4.5	0:DiseaseFree	4.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5947	47.1	Female	1:DECEASED	6.3	1:Recurred/Progressed	1.4	Nonstandard Radiation
+TCGA-19-5950	52.7	Female	0:LIVING	11.3	1:Recurred/Progressed	9.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5951	76.7	Male	1:DECEASED	8	0:DiseaseFree	8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5952	62.5	Male	1:DECEASED	18.9	0:DiseaseFree	18.9	Nonstandard Radiation
+TCGA-19-5954	72.2	Female	0:LIVING	8	0:DiseaseFree	8	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5955	83.6	Male	1:DECEASED	1.8	0:DiseaseFree	1.8	Unspecified Radiation
+TCGA-19-5956	53.6	Female	0:LIVING	6.5	0:DiseaseFree	6.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5958	56	Male	0:LIVING	5.4	0:DiseaseFree	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5959	77.9	Female	0:LIVING	5.3	1:Recurred/Progressed	3.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-19-5960	56.5	Male	0:LIVING	5.4	0:DiseaseFree	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1438	36.9	Male	0:LIVING	10	1:Recurred/Progressed	5.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1439	63.8	Male	1:DECEASED	13.9	1:Recurred/Progressed	9.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1440	48.4	Male	0:LIVING	9.7	1:Recurred/Progressed	7.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1442	43.7	Male	0:LIVING	31.3	0:DiseaseFree	31.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1443	60.2	Female	0:LIVING	7.1	1:Recurred/Progressed	7.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-1799	68.9	Male	1:DECEASED	9.4	1:Recurred/Progressed	7	Standard Radiation, TMZ Chemo
+TCGA-26-5132	74.5	Male	0:LIVING	9.4	0:DiseaseFree	9.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-5133	59	Male	0:LIVING	14.9	1:Recurred/Progressed	12.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-5134	74.2	Male	0:LIVING	5.5	0:DiseaseFree	5.5	Standard Radiation
+TCGA-26-5135	72.5	Female	1:DECEASED	8.8	0:DiseaseFree	8.8	Unspecified Radiation
+TCGA-26-5136	78	Female	0:LIVING	1.2	0:DiseaseFree	1.2	Unspecified Radiation
+TCGA-26-5139	65.1	Female	0:LIVING	1.6	0:DiseaseFree	1.6	Unspecified Radiation
+TCGA-26-6173	57.8	Male	0:LIVING	7.9	0:DiseaseFree	7.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-26-6174	65.4	Male	0:LIVING	2.3	0:DiseaseFree	2.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-1830	57.9	Male	1:DECEASED	5.1	1:Recurred/Progressed	4.1	Standard Radiation, TMZ Chemo
+TCGA-27-1831	66.9	Male	1:DECEASED	16.6	1:Recurred/Progressed	4.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-1832	59.4	Female	1:DECEASED	9.9	1:Recurred/Progressed	6	Nonstandard Radiation, TMZ Chemo
+TCGA-27-1833	67.3	Female	1:DECEASED	24.2	1:Recurred/Progressed	15.4	Standard Radiation, TMZ Chemo
+TCGA-27-1834	56.3	Male	1:DECEASED	40.5	1:Recurred/Progressed	11	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-1835	53.2	Female	1:DECEASED	21.3	1:Recurred/Progressed	5.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-1836	33	Female	1:DECEASED	30.1	1:Recurred/Progressed	5.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-1837	36.6	Male	1:DECEASED	14	1:Recurred/Progressed	4.4	Standard Radiation, TMZ Chemo
+TCGA-27-1838	59.4	Female	1:DECEASED	11.5	1:Recurred/Progressed	3.9	Standard Radiation, TMZ Chemo
+TCGA-27-2518	52.4	Male	1:DECEASED	24.7	1:Recurred/Progressed	17.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-2519	48.5	Male	0:LIVING	10.4	1:Recurred/Progressed	8.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-27-2521	34.7	Male	0:LIVING	10.4	0:DiseaseFree	10.4	Standard Radiation, TMZ Chemo
+TCGA-27-2523	63.1	Male	1:DECEASED	16.1	1:Recurred/Progressed	13.2	Standard Radiation, TMZ Chemo
+TCGA-27-2524	56.3	Male	1:DECEASED	7.6	0:DiseaseFree	7.6	Standard Radiation, TMZ Chemo
+TCGA-27-2526	79.3	Female	1:DECEASED	2.9	0:DiseaseFree	2.9	Unspecified Radiation
+TCGA-27-2527	81.1	Male	1:DECEASED	14.4	0:DiseaseFree	14.4	Nonstandard Radiation
+TCGA-27-2528	62.6	Male	1:DECEASED	15.8	1:Recurred/Progressed	2.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1745	76.2	Male	0:LIVING	11.3	1:Recurred/Progressed	10.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1746	77.5	Female	0:LIVING	0.2	0:DiseaseFree	0.2	Unspecified Radiation
+TCGA-28-1747	44.6	Male	1:DECEASED	2.5	0:DiseaseFree	2.5	Nonstandard Radiation, TMZ Chemo
+TCGA-28-1749	73.3	Male	0:LIVING	9.2	1:Recurred/Progressed	9.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1750	40.6	Female	0:LIVING	8.3	1:Recurred/Progressed	3.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1751	61	Female	0:LIVING	7.6	1:Recurred/Progressed	7.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1752	42.6	Female	0:LIVING	8.5	0:DiseaseFree	8.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1753	53	Male	0:LIVING	1.2	0:DiseaseFree	1.2	Nonstandard Radiation
+TCGA-28-1755	52.7	Female	1:DECEASED	1.5	0:DiseaseFree	1.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1756	78.4	Male	0:LIVING	2.8	0:DiseaseFree	2.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-1757	71.7	Male	0:LIVING	0.1	0:DiseaseFree	0.1	Unspecified Therapy
+TCGA-28-1760	48.6	Male	0:LIVING	4.7	1:Recurred/Progressed	3.5	Standard Radiation, TMZ Chemo
+TCGA-28-2499	59.8	Male	0:LIVING	14.5	0:DiseaseFree	14.5	Unspecified Therapy
+TCGA-28-2502	65.2	Male	0:LIVING	0.7	0:DiseaseFree	0.7	Nonstandard Radiation
+TCGA-28-2506	63.8	Female	0:LIVING	6.7	1:Recurred/Progressed	2.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-2509	77.3	Female	0:LIVING	4.8	0:DiseaseFree	4.8	Standard Radiation, TMZ Chemo
+TCGA-28-2513	69.6	Female	0:LIVING	7.3	1:Recurred/Progressed	2.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-2514	45.8	Male	0:LIVING	5.3	0:DiseaseFree	5.3	Standard Radiation, TMZ Chemo
+TCGA-28-5204	72.5	Male	1:DECEASED	14.9	0:DiseaseFree	14.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-5207	71.1	Male	1:DECEASED	11.3	0:DiseaseFree	11.3	Nonstandard Radiation, TMZ Chemo
+TCGA-28-5208	52.2	Male	0:LIVING	15.6	1:Recurred/Progressed	4.8	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-5209	66.7	Female	0:LIVING	2.5	0:DiseaseFree	2.5	Nonstandard Radiation, TMZ Chemo
+TCGA-28-5211	42.5	Male	0:LIVING	11.8	1:Recurred/Progressed	7.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-5213	72.5	Male	0:LIVING	9.8	0:DiseaseFree	9.8	Standard Radiation, TMZ Chemo
+TCGA-28-5214	53.4	Male	0:LIVING	14.2	1:Recurred/Progressed	8.1	Nonstandard Radiation, TMZ Chemo
+TCGA-28-5215	62.1	Female	1:DECEASED	11	1:Recurred/Progressed	5.4	Nonstandard Radiation, TMZ Chemo
+TCGA-28-5216	52.7	Male	0:LIVING	13.6	0:DiseaseFree	13.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-28-5218	63.2	Male	1:DECEASED	5.2	0:DiseaseFree	5.2	Standard Radiation, TMZ Chemo
+TCGA-28-5219	47.2	Female	0:LIVING	8.5	1:Recurred/Progressed	8.5	Nonstandard Radiation, TMZ Chemo
+TCGA-28-5220	67.4	Male	0:LIVING	10.5	1:Recurred/Progressed	8.6	Standard Radiation, TMZ Chemo
+TCGA-28-6450	60.7	Male	1:DECEASED	5.4	0:DiseaseFree	5.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-1970	59.2	Male	1:DECEASED	15.4	1:Recurred/Progressed	13.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-1973	21.2	Male	1:DECEASED	21.1	1:Recurred/Progressed	16.7	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-1976	65.2	Male	1:DECEASED	0.5	0:DiseaseFree	0.5	Unspecified Radiation
+TCGA-32-1977	63.5	Female	0:LIVING	0.1	0:DiseaseFree	0.1	Unspecified Therapy
+TCGA-32-1978	57.6	Male	1:DECEASED	15.9	0:DiseaseFree	15.9	Unspecified Therapy
+TCGA-32-1979	69.1	Female	1:DECEASED	19.5	1:Recurred/Progressed	8.7	Unspecified Therapy
+TCGA-32-1980	72.5	Male	1:DECEASED	1.2	0:DiseaseFree	1.2	Unspecified Radiation
+TCGA-32-1982	76	Female	1:DECEASED	4.7	0:DiseaseFree	4.7	Alkylating Chemo
+TCGA-32-1986	68.6	Male	1:DECEASED	12.7	1:Recurred/Progressed	7.7	Standard Radiation, TMZ Chemo
+TCGA-32-1987	49.5	Female	1:DECEASED	14.8	1:Recurred/Progressed	2.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-1991	60.3	Male	1:DECEASED	16.9	1:Recurred/Progressed	11.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2491	63.3	Male	1:DECEASED	12.2	1:Recurred/Progressed	2.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2494	58	Female	1:DECEASED	20.8	1:Recurred/Progressed	16	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2495	59.9	Female	1:DECEASED	15	1:Recurred/Progressed	8.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2615	62.7	Male	1:DECEASED	15.9	1:Recurred/Progressed	4.3	Nonstandard Radiation, TMZ Chemo
+TCGA-32-2616	48.7	Female	1:DECEASED	7.3	1:Recurred/Progressed	6	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2632	80.2	Male	1:DECEASED	8.8	0:DiseaseFree	8.8	Unspecified Therapy
+TCGA-32-2634	82	Male	0:LIVING	8.9	0:DiseaseFree	8.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-2638	67.5	Male	0:LIVING	7.4	0:DiseaseFree	7.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-4208	25.2	Male	0:LIVING	13.2	0:DiseaseFree	13.2	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-4209	40.8	Male	0:LIVING	11.1	1:Recurred/Progressed	3.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-4210	73.3	Male	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Therapy
+TCGA-32-4211	56.8	Male	1:DECEASED	12.6	0:DiseaseFree	12.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-4213	47.2	Female	0:LIVING	11.7	1:Recurred/Progressed	11.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-4719	73.1	Male	1:DECEASED	10.9	0:DiseaseFree	10.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-32-5222	66.1	Male	0:LIVING	5.4	1:Recurred/Progressed	3.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-2571	89.3	Male	1:DECEASED	0.9	1:Recurred/Progressed	0.9	TMZ Chemo
+TCGA-41-2572	67.1	Male	1:DECEASED	13.4	1:Recurred/Progressed	4	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-2573	60	Male	0:LIVING	8.9	1:Recurred/Progressed	5.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-2575	75.5	Male	1:DECEASED	9.5	1:Recurred/Progressed	4.3	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-3392	88.6	Male	1:DECEASED	1	0:DiseaseFree	1	Unspecified Radiation
+TCGA-41-3393	81.9	Female	1:DECEASED	4.4	0:DiseaseFree	4.4	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-3915	49	Male	0:LIVING	6	0:DiseaseFree	6	TMZ Chemoradiation, TMZ Chemo
+TCGA-41-4097	63.3	Female	1:DECEASED	0.2	0:DiseaseFree	0.2	Unspecified Radiation
+TCGA-41-5651	59.4	Female	0:LIVING	11.5	1:Recurred/Progressed	6.9	TMZ Chemoradiation, TMZ Chemo
+TCGA-74-6573	67.4	Male	1:DECEASED	3.5	0:DiseaseFree	3.5	TMZ Chemoradiation, TMZ Chemo
+TCGA-76-4925	76.7	Male	1:DECEASED	4.8	1:Recurred/Progressed	2.9	Nonstandard Radiation, TMZ Chemo
+TCGA-76-4926	68.7	Male	1:DECEASED	4.5	1:Recurred/Progressed	1.1	Nonstandard Radiation, TMZ Chemo
+TCGA-76-4927	58	Male	1:DECEASED	17.6	0:DiseaseFree	17.6	Unspecified Therapy
+TCGA-76-4928	85.6	Female	1:DECEASED	3.1	0:DiseaseFree	3.1	Nonstandard Radiation, TMZ Chemo
+TCGA-76-4929	76.2	Female	1:DECEASED	3.7	0:DiseaseFree	3.7	Unspecified Therapy
+TCGA-76-4931	70.7	Female	1:DECEASED	9.1	1:Recurred/Progressed	3.7	Nonstandard Radiation, TMZ Chemo
+TCGA-76-4932	50.5	Female	1:DECEASED	47.9	0:DiseaseFree	47.9	Standard Radiation, TMZ Chemo
+TCGA-76-4934	66.6	Female	1:DECEASED	2.5	0:DiseaseFree	2.5	Unspecified Therapy
+TCGA-76-4935	52.6	Female	0:LIVING	10.8	1:Recurred/Progressed	10.8	Standard Radiation, TMZ Chemo
+TCGA-76-6191	57.3	Male	1:DECEASED	16.7	1:Recurred/Progressed	10.6	TMZ Chemoradiation, TMZ Chemo
+TCGA-76-6192	74.8	Male	1:DECEASED	3.3	1:Recurred/Progressed	2.5	Standard Radiation, TMZ Chemo
+TCGA-76-6193	78.7	Male	1:DECEASED	2.7	1:Recurred/Progressed	2.1	Standard Radiation, TMZ Chemo
+TCGA-76-6282	63.9	Male	1:DECEASED	17.1	1:Recurred/Progressed	15.1	TMZ Chemoradiation, TMZ Chemo
+TCGA-76-6285	64.8	Female	1:DECEASED	8.3	0:DiseaseFree	8.3	TMZ Chemo
+TCGA-81-5910	64.5	Male	1:DECEASED	1.6	0:DiseaseFree	1.6	Unspecified Radiation
+TCGA-87-5896	50.4	Female	0:LIVING	0.1	0:DiseaseFree	0.1	Unspecified Therapy
+TCGA-06-0119	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0140	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0142	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0151	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0165	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0167	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-0240	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-1806	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-6693	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-6694	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-6697	NA	NA	NA	NA	NA	NA	NA
+TCGA-06-6699	NA	NA	NA	NA	NA	NA	NA
+TCGA-14-0862	NA	NA	NA	NA	NA	NA	NA
+TCGA-16-1048	NA	NA	NA	NA	NA	NA	NA
+TCGA-19-5953	NA	NA	NA	NA	NA	NA	NA
+TCGA-28-2501	NA	NA	NA	NA	NA	NA	NA
+TCGA-28-2510	NA	NA	NA	NA	NA	NA	NA
+TCGA-32-2498	NA	NA	NA	NA	NA	NA	NA
+TCGA-41-6646	NA	NA	NA	NA	NA	NA	NA
+TCGA-74-6575	NA	NA	NA	NA	NA	NA	NA
+TCGA-74-6577	NA	NA	NA	NA	NA	NA	NA
+TCGA-74-6578	NA	NA	NA	NA	NA	NA	NA
+TCGA-74-6584	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6280	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6283	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6286	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6656	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6657	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6660	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6661	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6662	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6663	NA	NA	NA	NA	NA	NA	NA
+TCGA-76-6664	NA	NA	NA	NA	NA	NA	NA
+TCGA-81-5911	NA	NA	NA	NA	NA	NA	NA
