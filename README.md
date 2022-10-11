@@ -24,7 +24,7 @@
 
 ## About
 
-Maintainer: [Cankun Wang](https://github.com/Wang-Cankun)
+Maintainer: [Cankun Wang](https://github.com/BMEngineeR)
 
 Authors:
 
@@ -32,6 +32,7 @@ Authors:
 - [Jiaxin Yang](https://github.com/Jiaxin-yyjx)
 - [Yingyi Zhu](https://github.com/mandyyyyi22)
 - [Shicong Wang](https://github.com/Alex1516612806)
+- [Yuzhou Chang](https://github.com/Alex1516612806)
 
 Repository material are inspired by the following courses or workshops:
 
